@@ -1,5 +1,5 @@
 import React from "react";
-import BloodFlowLogo from "../Assets/BloodflowLogo.png";
+import BloodFlowLogo from "../../Assets/BloodflowLogo.png";
 
 
 const Footer = () => {

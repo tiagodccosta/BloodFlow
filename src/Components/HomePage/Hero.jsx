@@ -1,5 +1,7 @@
 import React from 'react';
 import { ReactTyped } from "react-typed";
+import { Link as RouterLink} from 'react-router-dom';
+
 
 
 const Hero = () => {
@@ -18,7 +20,8 @@ const Hero = () => {
                     loop
                     />
                 </div>
-                <button className='bg-[#ff0000] w-[200px] rounded-md font-bold my-6 mx-auto py-3 text-black'>GET STARTED</button>
+                <button className='bg-[#ff0000] w-[200px] rounded-md font-bold my-6 mx-auto py-3 text-black'>
+                <RouterLink to="/signup">GET STARTED</RouterLink></button>
             </div>
         </div>
     )

@@ -1,7 +1,7 @@
 import React from "react";
-import SinglePlan from '../Assets/singlePlan.jpeg';
-import PremiumPlan from '../Assets/PremiumPlan.png';
-import EnterprisePlan from '../Assets/Enterprise.png';
+import SinglePlan from '../../Assets/singlePlan.jpeg';
+import PremiumPlan from '../../Assets/PremiumPlan.png';
+import EnterprisePlan from '../../Assets/Enterprise.png';
 
 
 const Cards = () => {

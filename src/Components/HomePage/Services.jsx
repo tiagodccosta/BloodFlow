@@ -1,5 +1,5 @@
 import React from "react";
-import Laptop from '../Assets/analytics.jpg'
+import Laptop from '../../Assets/analytics.jpg'
 
 const Services = () => {
     return (
