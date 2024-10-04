@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes scroll-horizontal {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+  
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+.animate-scroll-horizontal {
+    animation: scroll-horizontal 35s linear infinite;
+    display: flex;
+    width: 200%;
+}
+
+.animate-scroll-horizontal:hover {
+    animation-play-state: paused;
+}
+
+.animate-scroll-horizontal img {
+    border: 2px solid #ce3d3d;
+}
+
+.animate-scroll-horizontal img {
+    border: 2px solid #ce3d3d;
+    box-shadow: 6px 6px 6px 6px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.3s ease; 
+}
+
+.animate-scroll-horizontal:hover img {
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Larger shadow on hover */
+}
+
+@media screen and (max-width: 768px) {
+    .animate-scroll-horizontal {
+        animation: scroll-horizontal 10s linear infinite;
+    }
+}
