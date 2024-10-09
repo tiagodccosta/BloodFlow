@@ -18,7 +18,6 @@ function SignUpPage() {
   const { t } = useTranslation();  
 
   const [username, setUsername] = useState("");
-  const [userHealthNumber, setHealthNumber] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState(null);
   const [userEmail, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,8 +35,8 @@ function SignUpPage() {
         const userRef = doc(db, "users", user.uid);
         await setDoc(userRef, {
             username: username,
-            healthNumber: userHealthNumber,
             dateOfBirth: Timestamp.fromDate(dateOfBirth),
+            medicalCondition: medicalCondition
         });
         toast.success(t('registerToastSuc'));
 
