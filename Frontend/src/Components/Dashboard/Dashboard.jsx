@@ -630,7 +630,7 @@ function Dashboard() {
                                     </button>
                                 </div>
                                 {/* Results list */}
-                                <div className={`p-3 ${resultsVisible ? '' : 'hidden'} -mt-2 text-xs font-bold`} style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                <div className={`p-3 ${resultsVisible ? '' : 'hidden'} -mt-2 text-xs font-bold`} style={{ maxHeight: '295px', overflowY: 'auto' }}>
                                     <ul id="resultsList" className='cursor-pointer'>
                                         {userFiles.slice().reverse().map((result, index) => (
                                             <li key={index} onClick={() => handleFileClick(result)} className={`-m-2 py-3 ${selectedFileData?.name === result ? 'text-[#ce3d3d]' : 'text-gray-600'}`}>{result}</li>
@@ -688,7 +688,7 @@ function Dashboard() {
                                     </button>
                                 </div>
                                 {/* Results list */}
-                                <div className={`${resultsVisible ? '' : 'hidden'} -mt-2 text-xs p-2 font-bold text-gray-600 overflow-y-auto`} style={{ maxHeight: '215px' }}>
+                                <div className={`${resultsVisible ? '' : 'hidden'} -mt-2 text-xs p-2 font-bold text-gray-600 overflow-y-auto`} style={{ maxHeight: '230px' }}>
                                     <ul id="resultsList" className='pl-3 cursor-pointer'>
                                         {userFiles.slice().reverse().map((result, index) => (
                                             <li key={index} onClick={() => handleFileClick(result)} className={`-m-2 py-3 ${selectedFileData?.name === result ? 'text-[#ce3d3d]' : 'text-gray-600'}`}>{result}</li>
