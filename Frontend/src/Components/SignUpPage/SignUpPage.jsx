@@ -38,7 +38,6 @@ function SignUpPage() {
             username: username,
             healthNumber: userHealthNumber,
             dateOfBirth: Timestamp.fromDate(dateOfBirth),
-            medicalCondition: medicalCondition
         });
         toast.success(t('registerToastSuc'));
 
@@ -58,7 +57,6 @@ function SignUpPage() {
     navigate("/");
   };
 
-    // function to fecth endpoint in server.js to send welcome email to user. Need to pass the email and userName as parameter.
     const sendEmail = async (email, name) => {
         const response = await fetch(`${BASE_URL}/send-email-welcome`, {
             method: 'POST',
@@ -88,14 +86,6 @@ function SignUpPage() {
                     value={username}
                     required={true}
                     onChange={(e) => setUsername(e.target.value)}/>
-                </div>
-                <div className='flex flex-col py-2 mx-4'>
-                    <input className='border border-[#ff0000] rounded-lg p-3 focus:outline-none focus:ring-1 focus:ring-[#ff0000]' 
-                    type='number' 
-                    placeholder={t('snsNumber')}
-                    value={userHealthNumber}
-                    required={true}
-                    onChange={(e) => setHealthNumber(e.target.value)}/>
                 </div>
                 <div className='flex flex-col py-2 mx-4'>
                     <DatePicker

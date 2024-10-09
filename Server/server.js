@@ -88,7 +88,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/send-email-analysis', async (req, res) => {
   try {
-    const { userEmail, userName, healthNumber, analysis, pdfUrl, userAvailability } = req.body;
+    const { userEmail, userName, analysis, pdfUrl, userAvailability } = req.body;
 
     const htmlAnalysis = await marked(analysis);
 
@@ -108,7 +108,6 @@ app.post('/send-email-analysis', async (req, res) => {
         <h1>Uma nova análise foi criada:</h1>
         <ul>
             <li>Utilizador: ${userName}</li>
-            <li>Número de Utente: ${healthNumber}</li>
             <li>Análise: ${htmlAnalysis}</li>
             <li><strong>Disponibilidade de ${userName} para uma consulta:</strong> <br> ${userAvailability}</li>
             <li>PDF Link: <a href="${publicUrl}">Descarregar PDF</a></li>

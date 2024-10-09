@@ -543,7 +543,6 @@ function Dashboard() {
             const user = auth.currentUser;
             const userEmail = user ? user.email : null;
             const userName = userData.username;
-            const healthNumber = userData.healthNumber;
             const analysis = displayedText;
             const pdfUrl = `bloodTestResults/${user.uid}/${selectedFileData.name}`;
             const userAvailability = formatAvailability();
@@ -551,7 +550,6 @@ function Dashboard() {
             const response = await axios.post(`${BASE_URL}/send-email-analysi`, {
                 userEmail,
                 userName,
-                healthNumber,
                 analysis,
                 pdfUrl,
                 userAvailability
@@ -603,7 +601,6 @@ function Dashboard() {
                                 {userData !== null && (
                                     <>
                                         <li className="px-4 py-2 font-sans"><strong>{t('nomeDash')}</strong> {userData.username}</li>
-                                        <li className="px-4 py-2 font-sans"><strong>{t('snsNumberDash')}</strong> {userData.healthNumber}</li>
                                         <li className="px-4 py-2 font-sans"><strong>{t('Idade')}</strong> {userAge} Anos</li>
                                         <li className="px-4 py-2 font-sans"><strong>{t('condicaoMedicaDash')}</strong> {userData.medicalCondition ? userData.medicalCondition : t('nenhuma')}</li>
 
@@ -663,7 +660,6 @@ function Dashboard() {
                                 {userData && (
                                     <>
                                         <li className="py-2 font-sans"><strong>{t('nomeDash')}</strong> {userData.username}</li>
-                                        <li className="py-2 font-sans"><strong>{t('snsNumberDash')}</strong> {userData.healthNumber}</li>
                                         <li className="py-2 font-sans"><strong>{t('Idade')}</strong> {userAge} Anos</li>
                                         <li className="py-2 font-sans"><strong>{t('condicaoMedicaDash')}</strong> {userData.medicalCondition ? userData.medicalCondition : t('nenhuma')}</li>
 
