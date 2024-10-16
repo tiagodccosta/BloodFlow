@@ -22,11 +22,13 @@ function SignUpPage() {
   const [userEmail, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [medicalCondition, setMedicalCondition] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const BASE_URL = process.env.REACT_APP_BASE_URL;
 
   const registerUser = (e) => {
     e.preventDefault();
+    setLoading(true);
 
     createUserWithEmailAndPassword(auth, userEmail, password)
     .then(async (userCredential) => {
@@ -44,6 +46,7 @@ function SignUpPage() {
         navigate("/login");
     })
     .catch((error) => {
+        setLoading(false);
         if (error.code === 'auth/email-already-in-use') {
             toast.error(t('registerToastErrDupl'));
         } else {
@@ -146,7 +149,9 @@ function SignUpPage() {
                     onChange={(e) => setMedicalCondition(e.target.value)}/>
                 </div>
                 <div className='mx-4  my-3'>
-                    <button type='submit' className='bg-[#ff0000] w-full rounded-md font-bold py-3 text-white'>{t('registerAccount')}</button>
+                    <button type='submit' className='bg-[#ff0000] w-full rounded-md font-bold py-3 text-white'>
+                    {loading ? t('registering') : t('registerAccount')}
+                    </button>
                 </div>
             </form>
 

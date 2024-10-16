@@ -10,17 +10,21 @@ import { useTranslation } from 'react-i18next';
 function ForgotPassword() {
 
     const navigate = useNavigate();
-    const [email, setEmail] = useState('');  
+    const [email, setEmail] = useState(''); 
+    const [loading, setLoading] = useState(false);
 
     const { t } = useTranslation();
 
     const sendEmail = async (e) => {
         e.preventDefault();
+        setLoading(true);
+
         try {
             sendPasswordResetEmail(auth, email);
             toast.success(t('emailSent'));
             navigate("/login");
         } catch (error) {
+            setLoading(false);
             toast.error(t('emailError'));
         }
     };
@@ -44,7 +48,9 @@ function ForgotPassword() {
                         required />
                     </div>
                     <div className='mx-4 my-4'>
-                        <button type='submit' className='bg-[#ff0000] w-full rounded-md font-bold py-3 text-white'>{t('sendEmail')}</button>
+                        <button type='submit' className='bg-[#ff0000] w-full rounded-md font-bold py-3 text-white'>
+                            {loading ? t('sendingEmail') : t('sendEmail')}
+                        </button>
                     </div>
                 </form>
             </div>
