@@ -94,6 +94,17 @@ const Services = () => {
                 <TextReveal text={t('servicesScroll')} />
             </div>
 
+            {/* 
+                TODO: Create another section where we can show and explain more
+                about the servides we offer.
+
+                Like a 3 step with images and text of how BloodFlow works.
+
+                1 - We collect your essencial information for our analysis
+                2 - Centralize all your data in one place
+                3 - In seconds you can have a full analysis of your blood test results
+            */}      
+
         </div>
     )
 };
