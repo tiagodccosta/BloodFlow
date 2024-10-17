@@ -10,10 +10,16 @@ const Newsletter = () => {
     const { t } = useTranslation();
     const BASE_URL = process.env.REACT_APP_BASE_URL;
 
-    // function to fecth endpoint in server.js to send email to user. Need to pass the email as parameter.
-    const sendEmail = async (email) => {
+    const addEmailToDatabase = async (email) => {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/send-email-contact`, {
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setLoading(false);
+            return toast.error(t('registerToastErrEmail'));
+        }
+        
+        const response = await fetch('http://localhost:4000/add-email-to-database', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -22,16 +28,15 @@ const Newsletter = () => {
         });
 
         if (response.ok) {
-            toast.success(t('toastEmailSuccess'));
-            setLoading(false);
+            toast.success(t('addToEmailMarketing'));
         } else {
-            toast.error(t('toastEmailError'));
             setLoading(false);
-        }
-    };
+            toast.error(t('addEmailError'));
+        } 
+    }
 
     const handleButtonClick = () => {
-        sendEmail(userEmail);
+        addEmailToDatabase(userEmail);
     };
 
     return(

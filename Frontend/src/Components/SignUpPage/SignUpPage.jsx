@@ -30,8 +30,15 @@ function SignUpPage() {
     e.preventDefault();
     setLoading(true);
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+        setLoading(false);
+        return toast.error(t('registerToastErrEmail'));
+    }
+
     createUserWithEmailAndPassword(auth, userEmail, password)
     .then(async (userCredential) => {
+
         const user = userCredential.user;
 
         const userRef = doc(db, "users", user.uid);

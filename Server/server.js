@@ -130,53 +130,6 @@ app.post('/send-email-analysis', async (req, res) => {
   }
 });
 
-app.post('/send-email-contact', async (req, res) => {
-    try {
-        const { userEmail } = req.body;
-    
-        const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: userEmail,
-        subject: `Get to Know BloodFlow!`,
-            html: `
-                <div style="font-family: Arial, sans-serif; color: #333;">
-                    <div style="text-align: center;">
-                        <img src="cid:logo" alt="BloodFlow Logo" style="width: 150px; margin-bottom: 20px;">
-                    </div>
-                    <p style="font-size: 16px;">Welcome to <strong>BloodFlow</strong>!</p>
-                    <p style="font-size: 14px; line-height: 1.5;">
-                        We are a company dedicated to advanced blood test analysis using artificial intelligence.
-                    </p>
-                    <p style="font-size: 14px; line-height: 1.5;">
-                        Our mission is to provide our users with detailed insights into their health from their blood tests, helping them make informed decisions and promote a healthier lifestyle.
-                    </p>
-                    <p style="font-size: 14px; line-height: 1.5;">
-                        If you have any questions or need more information, please don't hesitate to contact us.
-                    </p>
-                    <p style="font-size: 16px; margin-top: 20px;">Thank you for choosing BloodFlow.</p>
-                    <p style="font-size: 16px;">Sincerely,<br>The BloodFlow Team</p>
-                    <div style="text-align: center; margin-top: 30px;">
-                        <p style="font-size: 12px; color: #888;">© 2024 BloodFlow. All rights reserved.</p>
-                    </div>
-                </div>
-            `,
-            attachments: [
-                {
-                    filename: 'logo.png',
-                    path: path.join(__dirname, './logo.png'),
-                    cid: 'logo'
-                }
-            ]   
-        };
-
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({ message: 'Email sent successfully' });
-    } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).json({ error: 'An error occurred while sending email' });
-    }
-});
-
 app.post('/send-email-welcome', async (req, res) => {
     try {
         const { userEmail, userName } = req.body;
@@ -222,6 +175,26 @@ app.post('/send-email-welcome', async (req, res) => {
     } catch (error) {
         console.error('Error sending email:', error);
         res.status(500).json({ error: 'An error occurred while sending email' });
+    }
+});
+
+app.post('/add-email-to-database', async (req, res) => {
+    try {
+        const { userEmail } = req.body;
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userEmail)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+
+        const db = admin.firestore();
+        const emailRef = db.collection('marketingEmails').doc(userEmail);
+        await emailRef.set({ email: userEmail });
+        res.status(200).json({ message: 'Email added to database' });
+        console.log('Email added to database:', userEmail);
+    } catch (error) {
+        console.error('Error adding email to database:', error);
+        res.status(500).json({ error: 'An error occurred while adding email to database' });
     }
 });
 
