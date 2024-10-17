@@ -31,9 +31,11 @@ function LoginPage() {
           },
           body: JSON.stringify({ email: userEmail, password }),
         });
+
         if (!response.ok) {
-          throw new Error('Login failed');
+          throw new Error(t('loginError'));
         }
+        
         const data = await response.json();
         const customToken = data.token;
 
@@ -51,12 +53,12 @@ function LoginPage() {
         const userData = userDoc.data();
 
         if (userData) {
-          toast.success(`Welcome ${userData.username}!`);
+          toast.success(t('bemVindo') `${userData.username}!`);
           navigate('/dashboard', { state: { user: userData } });
         }
       } catch (error) {
         setLoading(false);
-        toast.error('Login error');
+        toast.error(t('loginError'));
       }
   };
 
