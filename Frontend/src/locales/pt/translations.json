@@ -32,6 +32,8 @@
     "card4": "Armazenamento ilimitado",
     "card5": "Acesso à Análise de Inteligência Artificial",
     "registerToastSuc": "Registo efetuado com sucesso!",
+    "registerToastVerifyEmail": "Por favor, verifique o seu email para completar o registo.",
+    "registerToastVerifyEmailYet": "Por favor, verifique o seu email antes de iniciar sessão. Um novo email de verificação foi enviado.",
     "registerToastErrEmail": "Formato de email inválido. Por favor, tente novamente.",
     "registerToastErrDupl": "Este email já está associado a uma conta. Por favor, tente novamente.",
     "registerToastErr": "Ocorreu um erro durante o registo. Por favor, tente novamente.",

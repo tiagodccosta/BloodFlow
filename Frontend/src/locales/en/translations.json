@@ -32,6 +32,8 @@
     "card4": "Ilimited Storage",
     "card5": "Access to Artificial Intelligence Analysis",
     "registerToastSuc": "Signup successful!",
+    "registerToastVerifyEmail": "Please verify your email address to complete the registration.",
+    "registerToastVerifyEmailYet": "Please verify your email before logging in. A new verification email has been sent.",
     "registerToastErrEmail": "Invalid email format. Please try again.",
     "registerToastErrDupl": "This email is already associated with an account. Please try again.",
     "registerToastErr": "An error occurred during registration. Please try again.",

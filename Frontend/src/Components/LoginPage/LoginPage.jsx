@@ -40,6 +40,15 @@ function LoginPage() {
         await setPersistence(auth, rememberMe ? browserLocalPersistence : browserLocalPersistence);
         const userCredential = await signInWithCustomToken(auth, customToken);
         const user = userCredential.user;
+
+        if(!user.isVerified) {
+          setLoading(false);
+
+          await user.sendEmailVerification();
+
+          return toast.error(t('registerToastVerifyEmailYet'));
+        }
+
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.data();
 

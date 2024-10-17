@@ -41,14 +41,18 @@ function SignUpPage() {
 
         const user = userCredential.user;
 
+        await user.sendEmailVerification();
+
         const userRef = doc(db, "users", user.uid);
         await setDoc(userRef, {
             username: username,
             dateOfBirth: Timestamp.fromDate(dateOfBirth),
             medicalCondition: medicalCondition
         });
-        toast.success(t('registerToastSuc'));
 
+        toast.success(t('registerToastSuc'));
+        toast.info(t('registerToastVerifyEmail'));
+        
         sendEmail(userEmail, username);
         navigate("/login");
     })

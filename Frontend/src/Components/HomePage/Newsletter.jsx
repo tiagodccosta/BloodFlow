@@ -19,7 +19,7 @@ const Newsletter = () => {
             return toast.error(t('registerToastErrEmail'));
         }
         
-        const response = await fetch('http://localhost:4000/add-email-to-database', {
+        const response = await fetch(`${BASE_URL}/add-email-to-database`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
