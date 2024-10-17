@@ -43,9 +43,7 @@ function LoginPage() {
 
         if(!user.isVerified) {
           setLoading(false);
-
           await user.sendEmailVerification();
-
           return toast.error(t('registerToastVerifyEmailYet'));
         }
 
