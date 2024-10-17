@@ -4,6 +4,7 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { setPersistence, browserLocalPersistence, signInWithCustomToken } from "firebase/auth";
 import { getDoc, doc } from 'firebase/firestore';
 import { db, auth } from "../../firebase";
+import { sendEmailVerification } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
@@ -45,7 +46,7 @@ function LoginPage() {
 
         if(!user.isVerified) {
           setLoading(false);
-          await user.sendEmailVerification();
+          await sendEmailVerification(user);
           return toast.error(t('registerToastVerifyEmailYet'));
         }
 

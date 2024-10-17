@@ -3,7 +3,7 @@ import DatePicker from 'react-date-picker';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import BloodFlowLogo from "../../Assets/BloodflowLogo.png";
-import {createUserWithEmailAndPassword} from "firebase/auth";
+import {createUserWithEmailAndPassword, sendEmailVerification} from "firebase/auth";
 import { auth } from "../../firebase";
 import { doc, setDoc, Timestamp } from "firebase/firestore"; 
 import { db } from "../../firebase";
@@ -41,7 +41,7 @@ function SignUpPage() {
 
         const user = userCredential.user;
 
-        await user.sendEmailVerification();
+        await sendEmailVerification(user);
 
         const userRef = doc(db, "users", user.uid);
         await setDoc(userRef, {
@@ -52,7 +52,7 @@ function SignUpPage() {
 
         toast.success(t('registerToastSuc'));
         toast.info(t('registerToastVerifyEmail'));
-        
+
         sendEmail(userEmail, username);
         navigate("/login");
     })
