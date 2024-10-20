@@ -191,9 +191,7 @@ app.post('/add-email-to-database', async (req, res) => {
         const emailRef = db.collection('marketingEmails').doc(userEmail);
         await emailRef.set({ email: userEmail });
         res.status(200).json({ message: 'Email added to database' });
-        console.log('Email added to database:', userEmail);
     } catch (error) {
-        console.error('Error adding email to database:', error);
         res.status(500).json({ error: 'An error occurred while adding email to database' });
     }
 });

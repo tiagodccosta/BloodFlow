@@ -50,6 +50,19 @@ function SignUpPage() {
             medicalCondition: medicalCondition
         });
 
+        // add user email to marketing emails list in the database
+        const response = await fetch(`${BASE_URL}/add-email-to-database`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userEmail: userEmail }),
+        });
+
+        if (!response.ok) {
+            console.error('Failed to add email to database');
+        }
+
         toast.success(t('registerToastSuc'));
         toast.info(t('registerToastVerifyEmail'));
 
