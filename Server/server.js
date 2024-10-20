@@ -482,10 +482,6 @@ async function analyzeBloodTestEFP(text, userName, userAge, medicalCondition) {
     return response.data.choices[0].message.content;
 };
 
-// TODO:
-// Create endpoint for EFP Clinicto analyse their blood test automaticlly 
-// From their platform. We just analyse the blood test and send the result back to them
-// The endpoint will receive the PDF file, patient name, age, and known medical condition
 app.post('/efp/analyse-blood-test', async (req, res) => {
     const { pdfUrl, userName, userAge, medicalCondition } = req.body;
 
