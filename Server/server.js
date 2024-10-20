@@ -386,7 +386,7 @@ async function analyzeTextWithOpenAI(text, languageDirective, userName, userAge,
     const response = await axios.post(url, {
         model: "gpt-4o-2024-08-06",
         messages: messages,
-        max_tokens: 2500,
+        max_tokens: 3000,
         n: 1
     }, {
         headers: {
@@ -416,13 +416,90 @@ app.post('/analyze-blood-test', async (req, res) => {
     }
 });
 
+async function analyzeBloodTestEFP(text, userName, userAge, medicalCondition) {
+    const url = "https://api.openai.com/v1/chat/completions";
+
+    const messages = [
+        {
+            role: "system",
+            content: `
+            Por favor, dá a resposta ao paciente em Português, seguindo a formatação indicada abaixo.
+
+            Tu és o BloodFlow AI, um analista médico especializado. Analise os seguintes resultados de análises de sangue para o paciente chamado ${userName}, que tem ${userAge} anos. A análise tem de ter em extrema consideração que o paciente tem a seguinte condição médica: ${medicalCondition}. Forneça um relatório de análise completo e detalhado no seguinte formato, se o documento fornecido for um relatório de análise de sangue ou resultados de testes de saúde:
+
+            1. **Pontuação do Teste**: Forneça uma pontuação geral de saúde de 0 a 10 (por exemplo, '5.3'). Esta pontuação deve refletir o estado de saúde atual do paciente com base nos resultados dos testes. A pontuação deve estar no formato: " Score: X.X".
+
+            2. **Data da Análise**: Forneça a data da análise. O formato deve ser: "DD/MM/AAAA".
+
+            3. **Lista de Parâmetros e Valores**: Antes de iniciar a análise, liste o nome e o valor atual de cada parâmetro dos resultados da análise de sangue. O formato deve ser o seguinte:
+                - Nome do Parâmetro: Valor atual (Unidades)
+
+            4. **Resumo**: 
+                - Forneça uma visão geral dos principais resultados.
+                - Destaque o estado geral de saúde.
+                - Assegure que o resumo tem uma redação variada e estrutura diferente a cada vez para evitar repetição.
+
+            5. **Análise Detalhada**:
+                - **Comparação dos Resultados dos Testes**: Para os parâmetros mais relevantes, compare o valor atual com o intervalo de referência normal e valores anteriores (se houver).
+                - **Valores Anormais**: Destaque claramente e explique a significância de quaisquer valores fora do intervalo normal.
+                - **Tendências e Alterações**: Discuta quaisquer tendências ou alterações notáveis em comparação com os resultados de testes anteriores.
+                - **Implicações Potenciais**: Explique as possíveis implicações para a saúde dos resultados anormais.
+                - **Prognósticos**: Forneça uma perspetiva prognóstica com base nos resultados, indicando possíveis desfechos futuros de saúde se a tendência atual continuar.
+
+            6. **Recomendações**: 
+                - Sugira mais testes ou acompanhamentos que possam ser necessários para confirmar o diagnóstico ou obter mais informações.
+                - Recomende mudanças no estilo de vida, ajustes na dieta ou tratamentos que possam ajudar a melhorar a condição do paciente.
+                - Forneça conselhos médicos específicos ou precauções com base na análise. Assegure que as recomendações sejam práticas e exequíveis.
+
+            7. **Avisos e Considerações**:
+                - Destaque quaisquer valores críticos que requeiram atenção médica imediata.
+                - Note quaisquer possíveis interferências ou fatores que possam afetar a precisão dos resultados (por exemplo, medicamentos, atividades recentes).
+
+            Aqui estão os resultados das análises de sangue. O formato é:
+            - Nome do Parâmetro: valor anterior 1 / valor anterior 2 valor atual unidades
+
+            Por favor, use apenas o valor atual (o último valor) para a análise e mencione os valores anteriores apenas para comparação, se não houver valores anteriores use apenas o valor dado.
+            `,
+        },
+        {
+            role: "user",
+            content: text
+        }
+    ];
+
+    const response = await axios.post(url, {
+        model: "gpt-4o-2024-08-06",
+        messages: messages,
+        max_tokens: 4000,
+        n: 1
+    }, {
+        headers: {
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    return response.data.choices[0].message.content;
+};
 
 // TODO:
 // Create endpoint for EFP Clinicto analyse their blood test automaticlly 
 // From their platform. We just analyse the blood test and send the result back to them
 // The endpoint will receive the PDF file, patient name, age, and known medical condition
+app.post('/efp/analyse-blood-test', async (req, res) => {
+    const { pdfUrl, userName, userAge, medicalCondition } = req.body;
 
+    try {
+        const text = await extractTextFromPdf(pdfUrl);
 
+        const analysis = await analyzeBloodTestEFP(text, userName, userAge, medicalCondition);
+
+        res.json({ analysis });
+    } catch (error) {
+        console.error("Error analyzing blood test:", error);
+        res.status(500).json({ error: "Failed to analyze blood test" });
+    }
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
