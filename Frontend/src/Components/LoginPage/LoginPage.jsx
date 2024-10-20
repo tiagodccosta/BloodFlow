@@ -44,7 +44,8 @@ function LoginPage() {
         const userCredential = await signInWithCustomToken(auth, customToken);
         const user = userCredential.user;
 
-        if(!user.isVerified) {
+        await user.reload();
+        if(!user.emailVerified) {
           setLoading(false);
           await sendEmailVerification(user);
           return toast.error(t('registerToastVerifyEmailYet'));
@@ -54,7 +55,7 @@ function LoginPage() {
         const userData = userDoc.data();
 
         if (userData) {
-          toast.success(t('bemVindo') `${userData.username}!`);
+          toast.success(`${t('bemVindo')} ${userData.username}!`);
           navigate('/dashboard', { state: { user: userData } });
         }
       } catch (error) {
