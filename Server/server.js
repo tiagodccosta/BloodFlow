@@ -18,7 +18,6 @@ const MarkdownIt = require('markdown-it');
 const { v4: uuidv4 } = require('uuid');
 const jobQueue = new Map();
 const { Readable } = require('stream');
-const PDFDocument = require('pdf-lib').PDFDocument;
 
 require('dotenv').config();
 
@@ -217,7 +216,7 @@ async function extractTextFromPdfBuffer(pdfBuffer) {
         const pdfText = await PDFParser(pdfData);
         return pdfText.text;
     } catch (error) {
-        console.error('Error in extractTextFromPdfBuffer:', error);
+        console.log('Error in extractTextFromPdfBuffer:', error);
         throw error;
     }
 }
@@ -225,12 +224,54 @@ async function extractTextFromPdfBuffer(pdfBuffer) {
 app.post('/extract-text', async (req, res) => {
     try {
         const { pdfURL } = req.body;
-        const pdfRef = pdfURL;        
-        const extractedText = await extractTextFromPdf(pdfRef);
+        console.log('Received request to extract text from PDF:', pdfURL);
+        
+        const decodedUrl = decodeURIComponent(pdfURL);
+        const response = await fetch(decodedUrl);   
+
+        if (!response.ok) {
+            console.log('Failed to fetch PDF:', response.status);
+        }
+
+        const pdfBytes = await response.arrayBuffer();
+        const pdfBuffer = Buffer.from(pdfBytes);
+
+        const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
+        
+        if (isPasswordProtected) {
+            return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
+        }
+
+        const extractedText = await extractTextFromPdfBuffer(pdfBuffer);
         res.json({ text: extractedText });
     } catch (error) {
-        console.error('Error extracting text:', error);
-        res.status(500).send('Internal Server Error');
+        console.log('Error extracting text:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+});
+
+app.post('/submit-password', async (req, res) => {
+    const { pdfURL, password } = req.body;
+
+    try {
+        const pdfBuffer = await fetch(pdfURL)
+            .then(res => res.arrayBuffer())
+            .then(buffer => Buffer.from(buffer));
+
+        console.log('Received request to extract text from PDF with password:', pdfURL);    
+
+        const unlockedPdfBuffer = await unlockPDF(pdfBuffer, password);
+        console.log('unlockedPdfBuffer:', unlockedPdfBuffer);
+
+        // this is last point of the error we are having
+        // already unlocks the pdf but the extractTextFromPdfBuffer is not working
+        const extractedText = await extractTextFromPdfBuffer(unlockedPdfBuffer);
+
+        
+        return res.status(200).json({ extractedText });
+    } catch (error) {
+        console.log('Error unlocking PDF or analyzing:', error);
+        return res.status(400).json({ message: 'Incorrect password or unable to process the PDF. Please try again.' });
     }
 });
 
@@ -504,9 +545,17 @@ async function checkPDFPasswordProtection(pdfBuffer) {
 }
 
 async function unlockPDF(pdfBuffer, password) {
-    const pdfDoc = await PDFDocument.load(pdfBuffer, { password });
-    const unlockedPdf = await pdfDoc.save();
-    return unlockedPdf;
+    try {
+        const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+
+        const unlockedPdfBytes = await pdfDoc.save();
+        console.log('PDF unlocked successfully', unlockedPdfBytes.length);        
+
+        return Buffer.from(unlockedPdfBytes);
+    } catch (error) {
+        console.log('Error unlocking PDF:', error);
+        throw new Error('Failed to unlock PDF with the provided password.');
+    }
 }
 
 app.post('/efp/submit-password', async (req, res) => {
@@ -535,7 +584,6 @@ app.post('/efp/analyse-blood-test', async (req, res) => {
         if (isPasswordProtected) {
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
         }
-
         const extractedText = await extractTextFromPdfBuffer(pdfBuffer);
         const analysis = await analyzeBloodTestEFP(extractedText, userName, userAge, medicalCondition);
 

@@ -347,13 +347,38 @@ function Dashboard() {
 
     const convertPDFToText = async (pdfURL) => {
         try {
-            const response = await fetch(`${BASE_URL}/extract-text`, {
+            const response = await fetch(`http://localhost:4000/extract-text`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ pdfURL }),
               });
+
+              if (response.status === 400) {
+                const { message } = await response.json();
+                const password = prompt(message);
+                
+                if (password) {
+                    const unlockResponse = await fetch(`http://localhost:4000/submit-password`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ pdfURL, password }),
+                    });
+    
+                    if (unlockResponse.ok) {
+                        const unlockData = await unlockResponse.json();
+                        return unlockData.text;
+                    } else {
+                        console.error('Failed to unlock PDF:', unlockResponse.statusText);
+                        throw new Error('Failed to unlock PDF');
+                    }
+                } else {
+                    throw new Error('Password input was canceled');
+                }
+              }
       
               const data = await response.json();
               return data.text;
