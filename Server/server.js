@@ -228,7 +228,6 @@ async function extractTextFromPdfBuffer(pdfBuffer, password = null) {
 app.post('/extract-text', async (req, res) => {
     try {
         const { pdfURL } = req.body;
-        console.log('Received request to extract text from PDF:', pdfURL);
         
         const response = await fetch(pdfURL);   
 
@@ -238,8 +237,6 @@ app.post('/extract-text', async (req, res) => {
 
         const pdfBytes = await response.arrayBuffer();
         const pdfBuffer = Buffer.from(pdfBytes);
-
-        console.log('Buffer length:', pdfBuffer.length);
 
         const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
         
