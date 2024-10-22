@@ -212,7 +212,7 @@ async function extractTextFromPdf(pdfUrl) {
 
 async function extractTextFromPdfBuffer(pdfBuffer) {
     try {
-        const pdfData = new Uint8Array(Buffer.from(pdfBuffer, 'base64'));
+        const pdfData = new Uint8Array(pdfBuffer);
         const pdfText = await PDFParser(pdfData);
         return pdfText.text;
     } catch (error) {
@@ -255,13 +255,18 @@ app.post('/submit-password', async (req, res) => {
 
     try {
         const pdfBuffer = await fetch(pdfURL)
-            .then(res => res.arrayBuffer())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch PDF: ${response.status}`);
+                }
+                return response.arrayBuffer();
+            })
             .then(buffer => Buffer.from(buffer));
 
         console.log('Received request to extract text from PDF with password:', pdfURL);    
 
         const unlockedPdfBuffer = await unlockPDF(pdfBuffer, password);
-        console.log('unlockedPdfBuffer:', unlockedPdfBuffer);
+        console.log('unlockedPdfBuffer in submit endpoint', unlockedPdfBuffer.length);
 
         // this is last point of the error we are having
         // already unlocks the pdf but the extractTextFromPdfBuffer is not working
