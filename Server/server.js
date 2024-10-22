@@ -18,6 +18,7 @@ const MarkdownIt = require('markdown-it');
 const { v4: uuidv4 } = require('uuid');
 const jobQueue = new Map();
 const { Readable } = require('stream');
+const PDFDocument = require('pdf-lib').PDFDocument;
 
 require('dotenv').config();
 
@@ -206,6 +207,17 @@ async function extractTextFromPdf(pdfUrl) {
         return pdfText.text;
     } catch (error) {
         console.error('Error in extractTextFromPdf:', error);
+        throw error;
+    }
+}
+
+async function extractTextFromPdfBuffer(pdfBuffer) {
+    try {
+        const pdfData = new Uint8Array(Buffer.from(pdfBuffer, 'base64'));
+        const pdfText = await PDFParser(pdfData);
+        return pdfText.text;
+    } catch (error) {
+        console.error('Error in extractTextFromPdfBuffer:', error);
         throw error;
     }
 }
@@ -482,13 +494,50 @@ async function analyzeBloodTestEFP(text, userName, userAge, medicalCondition) {
     return response.data.choices[0].message.content;
 };
 
+async function checkPDFPasswordProtection(pdfBuffer) {
+    try {
+      await PDFDocument.load(pdfBuffer);
+      return false;
+    } catch (error) {
+      return true;
+    }
+}
+
+async function unlockPDF(pdfBuffer, password) {
+    const pdfDoc = await PDFDocument.load(pdfBuffer, { password });
+    const unlockedPdf = await pdfDoc.save();
+    return unlockedPdf;
+}
+
+app.post('/efp/submit-password', async (req, res) => {
+    const { pdfFile, password, userName, userAge, medicalCondition } = req.body;
+  
+    const pdfBuffer = Buffer.from(pdfFile, 'base64');
+    try {
+      const unlockedPdfBuffer = await unlockPDF(pdfBuffer, password);
+  
+      const extractedText = await extractTextFromPdfBuffer(unlockedPdfBuffer);
+      const analysisResults = await analyzeBloodTestEFP(extractedText, userName, userAge, medicalCondition);
+  
+      return res.status(200).json({ analysisResults });
+    } catch (error) {
+      return res.status(400).json({ message: 'Incorrect password. Please try again.' });
+    }
+});
+
 app.post('/efp/analyse-blood-test', async (req, res) => {
-    const { pdfUrl, userName, userAge, medicalCondition } = req.body;
+    const { pdfFile, userName, userAge, medicalCondition } = req.body;
 
     try {
-        const text = await extractTextFromPdf(pdfUrl);
+        const pdfBuffer = Buffer.from(pdfFile, 'base64');
+        const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
 
-        const analysis = await analyzeBloodTestEFP(text, userName, userAge, medicalCondition);
+        if (isPasswordProtected) {
+            return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
+        }
+
+        const extractedText = await extractTextFromPdfBuffer(pdfBuffer);
+        const analysis = await analyzeBloodTestEFP(extractedText, userName, userAge, medicalCondition);
 
         res.json({ analysis });
     } catch (error) {
