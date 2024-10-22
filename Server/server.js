@@ -196,24 +196,28 @@ app.post('/add-email-to-database', async (req, res) => {
     }
 });
 
-async function extractTextFromPdf(pdfUrl) {
+async function extractTextNoPassword(pdfBuffer) {
     try {
-        const pdfBytes = await fetch(pdfUrl)
-            .then(res => res.arrayBuffer());
-        const pdfData = new Uint8Array(pdfBytes);
+        const pdfData = new Uint8Array(pdfBuffer);
         const pdfText = await PDFParser(pdfData);
-
+        
         return pdfText.text;
     } catch (error) {
-        console.error('Error in extractTextFromPdf:', error);
+        console.error('Error in extractTextFromPdfBuffer:', error);
         throw error;
     }
 }
 
-async function extractTextFromPdfBuffer(pdfBuffer) {
+async function extractTextFromPdfBuffer(pdfBuffer, password = null) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
-        const pdfText = await PDFParser(pdfData);
+
+        const options = {};
+        if (password) {
+            options.password = password;
+        }
+
+        const pdfText = await PDFParser(pdfData, options);
         return pdfText.text;
     } catch (error) {
         console.log('Error in extractTextFromPdfBuffer:', error);
@@ -226,8 +230,7 @@ app.post('/extract-text', async (req, res) => {
         const { pdfURL } = req.body;
         console.log('Received request to extract text from PDF:', pdfURL);
         
-        const decodedUrl = decodeURIComponent(pdfURL);
-        const response = await fetch(decodedUrl);   
+        const response = await fetch(pdfURL);   
 
         if (!response.ok) {
             console.log('Failed to fetch PDF:', response.status);
@@ -236,13 +239,18 @@ app.post('/extract-text', async (req, res) => {
         const pdfBytes = await response.arrayBuffer();
         const pdfBuffer = Buffer.from(pdfBytes);
 
+        console.log('Buffer length:', pdfBuffer.length);
+
         const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
         
         if (isPasswordProtected) {
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
+        } else {
+            console.log('Doenst need password');
         }
 
-        const extractedText = await extractTextFromPdfBuffer(pdfBuffer);
+        const extractedText = await extractTextNoPassword(pdfBuffer);
+
         res.json({ text: extractedText });
     } catch (error) {
         console.log('Error extracting text:', error);
@@ -263,16 +271,8 @@ app.post('/submit-password', async (req, res) => {
             })
             .then(buffer => Buffer.from(buffer));
 
-        console.log('Received request to extract text from PDF with password:', pdfURL);    
+        const extractedText = await extractTextFromPdfBuffer(pdfBuffer, password);
 
-        const unlockedPdfBuffer = await unlockPDF(pdfBuffer, password);
-        console.log('unlockedPdfBuffer in submit endpoint', unlockedPdfBuffer.length);
-
-        // this is last point of the error we are having
-        // already unlocks the pdf but the extractTextFromPdfBuffer is not working
-        const extractedText = await extractTextFromPdfBuffer(unlockedPdfBuffer);
-
-        
         return res.status(200).json({ extractedText });
     } catch (error) {
         console.log('Error unlocking PDF or analyzing:', error);
@@ -542,24 +542,13 @@ async function analyzeBloodTestEFP(text, userName, userAge, medicalCondition) {
 
 async function checkPDFPasswordProtection(pdfBuffer) {
     try {
-      await PDFDocument.load(pdfBuffer);
-      return false;
+        await PDFDocument.load(pdfBuffer);
+        return false;
     } catch (error) {
-      return true;
-    }
-}
-
-async function unlockPDF(pdfBuffer, password) {
-    try {
-        const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
-
-        const unlockedPdfBytes = await pdfDoc.save();
-        console.log('PDF unlocked successfully', unlockedPdfBytes.length);        
-
-        return Buffer.from(unlockedPdfBytes);
-    } catch (error) {
-        console.log('Error unlocking PDF:', error);
-        throw new Error('Failed to unlock PDF with the provided password.');
+        if (error.message.includes('Password required') || error.message.includes('cannot be decrypted')) {
+            return true;
+        }
+        return false;
     }
 }
 
@@ -568,9 +557,8 @@ app.post('/efp/submit-password', async (req, res) => {
   
     const pdfBuffer = Buffer.from(pdfFile, 'base64');
     try {
-      const unlockedPdfBuffer = await unlockPDF(pdfBuffer, password);
   
-      const extractedText = await extractTextFromPdfBuffer(unlockedPdfBuffer);
+      const extractedText = await extractTextFromPdfBuffer(pdfBuffer, password);
       const analysisResults = await analyzeBloodTestEFP(extractedText, userName, userAge, medicalCondition);
   
       return res.status(200).json({ analysisResults });

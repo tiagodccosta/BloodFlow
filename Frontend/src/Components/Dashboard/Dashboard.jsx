@@ -370,7 +370,7 @@ function Dashboard() {
     
                     if (unlockResponse.ok) {
                         const unlockData = await unlockResponse.json();
-                        return unlockData.text;
+                        return unlockData.extractedText;
                     } else {
                         console.error('Failed to unlock PDF:', unlockResponse.statusText);
                         throw new Error('Failed to unlock PDF');
@@ -787,7 +787,7 @@ function Dashboard() {
                                                 {loading ? t('analysing') : t('analise')}
                                             </button>
                                         </div>
-                                        <button onClick={handleDeleteClick} className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-black mt-1 md:mt-2 md:-mb-8 hover:bg-black hover:text-white transition duration-300">
+                                        <button onClick={handleDeleteClick} className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white mt-1 md:mt-2 md:-mb-8 bg-black">
                                             {t('deleteButton')}
                                         </button>
                                         {showModal && (
