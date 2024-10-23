@@ -243,7 +243,7 @@ app.post('/extract-text', async (req, res) => {
         if (isPasswordProtected) {
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
         } else {
-            console.log('Doenst need password');
+            console.log('Doesnt need password');
         }
 
         const extractedText = await extractTextNoPassword(pdfBuffer);
