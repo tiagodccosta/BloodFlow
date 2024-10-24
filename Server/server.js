@@ -220,13 +220,15 @@ async function extractTextFromPdfBuffer(pdfBuffer, password = null) {
             options.password = password;
         }
 
-        const pdfText = await pdfParser(pdfData, options);
-        return pdfText.text;
+        const extractedText = await pdfParser(pdfData, options);
+        return extractedText.text;
     } catch (error) {
-        console.log('Error in extractTextFromPdfBuffer:', error.message);
+        console.error('Error in extractTextFromPdfBuffer:', error);
         throw error;
     }
 }
+
+
 
 app.post('/extract-text', async (req, res) => {
     try {
