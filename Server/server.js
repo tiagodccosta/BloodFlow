@@ -7,7 +7,6 @@ const { Storage } = require('@google-cloud/storage');
 const admin = require('firebase-admin');
 const firebase = require('firebase/app');
 const { getAuth, signInWithEmailAndPassword } = require('firebase/auth');
-const PDFParser = require('pdf-parse');
 const fetch = require('node-fetch');
 const path = require('path');
 const { PDFDocument, rgb } = require('pdf-lib');
@@ -18,6 +17,7 @@ const MarkdownIt = require('markdown-it');
 const { v4: uuidv4 } = require('uuid');
 const jobQueue = new Map();
 const { Readable } = require('stream');
+const pdfParser = require('pdf-parse');
 
 require('dotenv').config();
 
@@ -199,7 +199,7 @@ app.post('/add-email-to-database', async (req, res) => {
 async function extractTextNoPassword(pdfBuffer) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
-        const pdfText = await PDFParser(pdfData);
+        const pdfText = await pdfParser(pdfData);
         
         return pdfText.text;
     } catch (error) {
@@ -208,19 +208,22 @@ async function extractTextNoPassword(pdfBuffer) {
     }
 }
 
-async function extractTextFromPdfBuffer(pdfBuffer, password = null) {
+
+// TODO:
+// Error in extracting text with the pasword-protected PDF
+// Not handling the password correctly
+async function extractTextFromPdfBuffer(pdfBuffer, password) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
 
-        const options = {};
-        if (password) {
-            options.password = password;
-        }
+        const options = {
+            password: password
+        };
 
-        const pdfText = await PDFParser(pdfData, options);
+        const pdfText = await pdfParser(pdfData, options);
         return pdfText.text;
     } catch (error) {
-        console.log('Error in extractTextFromPdfBuffer:', error);
+        console.log('Error in extractTextFromPdfBuffer:', error.message);
         throw error;
     }
 }
@@ -241,6 +244,7 @@ app.post('/extract-text', async (req, res) => {
         const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
         
         if (isPasswordProtected) {
+            console.log('PDF is password-protected');
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
         } else {
             console.log('Doesnt need password');
@@ -542,10 +546,7 @@ async function checkPDFPasswordProtection(pdfBuffer) {
         await PDFDocument.load(pdfBuffer);
         return false;
     } catch (error) {
-        if (error.message.includes('Password required') || error.message.includes('cannot be decrypted')) {
-            return true;
-        }
-        return false;
+        return true;
     }
 }
 
