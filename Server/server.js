@@ -216,9 +216,10 @@ async function extractTextFromPdfBuffer(pdfBuffer, password) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
 
-        const options = {
-            password: password
-        };
+        const options = {};
+        if (password) {
+            options.password = password;
+        }
 
         const pdfText = await pdfParser(pdfData, options);
         return pdfText.text;
