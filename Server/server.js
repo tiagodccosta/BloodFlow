@@ -208,11 +208,10 @@ async function extractTextNoPassword(pdfBuffer) {
     }
 }
 
-
 // TODO:
 // Error in extracting text with the pasword-protected PDF
 // Not handling the password correctly
-async function extractTextFromPdfBuffer(pdfBuffer, password) {
+async function extractTextFromPdfBuffer(pdfBuffer, password = null) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
 
@@ -277,7 +276,7 @@ app.post('/submit-password', async (req, res) => {
 
         return res.status(200).json({ extractedText });
     } catch (error) {
-        console.log('Error unlocking PDF or analyzing:', error);
+        console.log('Error unlocking PDF or analyzing:', error.message);
         return res.status(400).json({ message: 'Incorrect password or unable to process the PDF. Please try again.' });
     }
 });
