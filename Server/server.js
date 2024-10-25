@@ -18,7 +18,6 @@ const { v4: uuidv4 } = require('uuid');
 const jobQueue = new Map();
 const { Readable } = require('stream');
 const PDFParser = require('pdf-parse');
-const { decrypt } = require('node-qpdf2');
 
 require('dotenv').config();
 
@@ -214,43 +213,28 @@ async function extractTextNoPassword(pdfBuffer) {
 // Not handling the password correctly
 async function extractTextFromPdfBuffer(pdfBuffer, password) {
     try {
-        const tempDir = path.join(__dirname, 'tmp');
-        
-        // Step 1: Check if the tmp directory exists; create it if not
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir);
+        const pdfData = new Uint8Array(pdfBuffer);
+
+        const options = {};
+        if (password) {
+            options.password = password || undefined;
         }
-        
-        // Step 2: Create paths for the temporary files
-        const tmpInputPath = path.join(tempDir, 'encrypted.pdf');
-        const tmpDecryptedPath = path.join(tempDir, 'decrypted.pdf');
 
-        // Step 3: Write the PDF buffer to a temporary file
-        fs.writeFileSync(tmpInputPath, pdfBuffer);
+        console.log('Extracting text from PDF with options:', options);
 
-        // Step 4: Decrypt the PDF
-        const decryptOptions = {
-            input: tmpInputPath,
-            output: tmpDecryptedPath,
-            password: password,
-        };
-        
-        await decrypt(decryptOptions);
-
-        // Step 5: Load the decrypted PDF and extract text
-        const decryptedPdfBuffer = fs.readFileSync(tmpDecryptedPath);
-        const pdfData = await PDFParser(decryptedPdfBuffer);
-        
-        // Step 6: Clean up temporary files
-        fs.unlinkSync(tmpInputPath);
-        fs.unlinkSync(tmpDecryptedPath);
-
-        return pdfData.text; // Return the extracted text
+        const pdfText = await PDFParser(pdfData, options);
+        return pdfText.text;
     } catch (error) {
-        console.log('Error unlocking PDF or analyzing:', error);
-        throw error; // Rethrow the error to handle it elsewhere if needed
+        if (error.message.includes('No password given') || error.message.includes('PasswordException')) {
+            console.log('Password is required to open this PDF:', error);
+        } else {
+            console.log('Error in extractTextFromPdfBuffer:', error);
+        }
+        throw error;
     }
 }
+
+
 
 app.post('/extract-text', async (req, res) => {
     try {
