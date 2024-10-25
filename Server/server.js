@@ -17,7 +17,8 @@ const MarkdownIt = require('markdown-it');
 const { v4: uuidv4 } = require('uuid');
 const jobQueue = new Map();
 const { Readable } = require('stream');
-const pdfParser = require('pdf-parse');
+const PDFParser = require('pdf-parse');
+const { decrypt } = require('node-qpdf2');
 
 require('dotenv').config();
 
@@ -199,7 +200,7 @@ app.post('/add-email-to-database', async (req, res) => {
 async function extractTextNoPassword(pdfBuffer) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
-        const pdfText = await pdfParser(pdfData);
+        const pdfText = await PDFParser(pdfData);
         
         return pdfText.text;
     } catch (error) {
@@ -211,24 +212,45 @@ async function extractTextNoPassword(pdfBuffer) {
 // TODO:
 // Error in extracting text with the pasword-protected PDF
 // Not handling the password correctly
-async function extractTextFromPdfBuffer(pdfBuffer, password = null) {
+async function extractTextFromPdfBuffer(pdfBuffer, password) {
     try {
-        const pdfData = new Uint8Array(pdfBuffer);
-
-        const options = {};
-        if (password) {
-            options.password = password;
+        const tempDir = path.join(__dirname, 'tmp');
+        
+        // Step 1: Check if the tmp directory exists; create it if not
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir);
         }
+        
+        // Step 2: Create paths for the temporary files
+        const tmpInputPath = path.join(tempDir, 'encrypted.pdf');
+        const tmpDecryptedPath = path.join(tempDir, 'decrypted.pdf');
 
-        const extractedText = await pdfParser(pdfData, options);
-        return extractedText.text;
+        // Step 3: Write the PDF buffer to a temporary file
+        fs.writeFileSync(tmpInputPath, pdfBuffer);
+
+        // Step 4: Decrypt the PDF
+        const decryptOptions = {
+            input: tmpInputPath,
+            output: tmpDecryptedPath,
+            password: password,
+        };
+        
+        await decrypt(decryptOptions);
+
+        // Step 5: Load the decrypted PDF and extract text
+        const decryptedPdfBuffer = fs.readFileSync(tmpDecryptedPath);
+        const pdfData = await PDFParser(decryptedPdfBuffer);
+        
+        // Step 6: Clean up temporary files
+        fs.unlinkSync(tmpInputPath);
+        fs.unlinkSync(tmpDecryptedPath);
+
+        return pdfData.text; // Return the extracted text
     } catch (error) {
-        console.error('Error in extractTextFromPdfBuffer:', error);
-        throw error;
+        console.log('Error unlocking PDF or analyzing:', error);
+        throw error; // Rethrow the error to handle it elsewhere if needed
     }
 }
-
-
 
 app.post('/extract-text', async (req, res) => {
     try {

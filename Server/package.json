@@ -27,6 +27,7 @@
     "markdown-to-html": "^0.0.13",
     "marked": "^12.0.2",
     "node-fetch": "^2.7.0",
+    "node-qpdf2": "^3.0.0",
     "nodemailer": "^6.9.15",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
