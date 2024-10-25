@@ -217,7 +217,7 @@ async function extractTextFromPdfBuffer(pdfBuffer, password) {
 
         const options = {};
         if (password) {
-            options.password = password || undefined;
+            options.password = password;
         }
 
         console.log('Extracting text from PDF with options:', options);
@@ -233,8 +233,6 @@ async function extractTextFromPdfBuffer(pdfBuffer, password) {
         throw error;
     }
 }
-
-
 
 app.post('/extract-text', async (req, res) => {
     try {
