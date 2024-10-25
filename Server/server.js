@@ -209,7 +209,7 @@ async function extractTextNoPassword(pdfBuffer) {
     }
 }
 
-//Fixed the error where password was not being passed to the function
+// Fixed the error where password was not being passed to the function
 // Now lets hope it doesnt break again
 // Now the other issue is make sure this will work in production
 async function extractTextFromPdfBuffer(pdfBuffer, password) {
