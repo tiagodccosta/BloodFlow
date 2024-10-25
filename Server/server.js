@@ -17,8 +17,8 @@ const MarkdownIt = require('markdown-it');
 const { v4: uuidv4 } = require('uuid');
 const jobQueue = new Map();
 const { Readable } = require('stream');
-const PDFParser = require('pdf-parse');
-const {PdfReader} = require('pdfreader');
+const pdfParser = require('pdf-parse');
+const { exec } = require('child_process');
 
 require('dotenv').config();
 
@@ -200,7 +200,7 @@ app.post('/add-email-to-database', async (req, res) => {
 async function extractTextNoPassword(pdfBuffer) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
-        const pdfText = await PDFParser(pdfData);
+        const pdfText = await pdfParser(pdfData);
         
         return pdfText.text;
     } catch (error) {
@@ -212,33 +212,38 @@ async function extractTextNoPassword(pdfBuffer) {
 //Fixed the error where password was not being passed to the function
 // Now lets hope it doesnt break again
 async function extractTextFromPdfBuffer(pdfBuffer, password) {
+    const tempInputPath = path.join(__dirname, 'tempInput.pdf');
+    const tempOutputPath = path.join(__dirname, 'tempOutput.pdf');
+    
     try {
-        const pdfData = new Uint8Array(pdfBuffer);
+        fs.writeFileSync(tempInputPath, pdfBuffer);
 
-        const extractedText = await unlockPdfWithPassword(pdfData, password);
+        await decryptPdf(tempInputPath, tempOutputPath, password);
+        console.log("PDF successfully decrypted");
+
+        const decryptedPdfBuffer = fs.readFileSync(tempOutputPath);
+        const text = await pdfParser(decryptedPdfBuffer);
         
-        return extractedText;
+        return text.text;
     } catch (error) {
-        console.error('Error unlocking PDF with pdf-reader, trying pdf-parse...', error.message);
+        console.error('Error in decryption or extraction:', error);
+    } finally {
+        fs.unlinkSync(tempInputPath);
+        fs.unlinkSync(tempOutputPath);
     }
 }
 
-// unlocking the pdf using PDFReader
-// works perfectly but some pdf encryptions may not be supported
-async function unlockPdfWithPassword(pdfData, password) {
+async function decryptPdf(inputPath, outputPath, password) {
     return new Promise((resolve, reject) => {
-        const text = [];
-        new PdfReader({ password: password }).parseBuffer(pdfData, (err, item) => {
-            if (err) {
-                console.log('Error parsing PDF:', err.message);
-                return reject(err);
+        const command = `qpdf --password=${password} --decrypt "${inputPath}" "${outputPath}"`;
+        
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.log('Error decrypting PDF:', error);
+                console.log('stdout:', stdout);
+                return reject(`Decryption failed: ${stderr}`);
             }
-            if (!item) {
-                return resolve(text.join('\n'));
-            }
-            if (item.text) {
-                text.push(item.text);
-            }
+            resolve(outputPath);
         });
     });
 }
