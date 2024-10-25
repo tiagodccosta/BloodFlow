@@ -211,6 +211,7 @@ async function extractTextNoPassword(pdfBuffer) {
 
 //Fixed the error where password was not being passed to the function
 // Now lets hope it doesnt break again
+// Now the other issue is make sure this will work in production
 async function extractTextFromPdfBuffer(pdfBuffer, password) {
     const tempInputPath = path.join(__dirname, 'tempInput.pdf');
     const tempOutputPath = path.join(__dirname, 'tempOutput.pdf');
@@ -219,7 +220,6 @@ async function extractTextFromPdfBuffer(pdfBuffer, password) {
         fs.writeFileSync(tempInputPath, pdfBuffer);
 
         await decryptPdf(tempInputPath, tempOutputPath, password);
-        console.log("PDF successfully decrypted");
 
         const decryptedPdfBuffer = fs.readFileSync(tempOutputPath);
         const text = await pdfParser(decryptedPdfBuffer);
