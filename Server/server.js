@@ -209,9 +209,8 @@ async function extractTextNoPassword(pdfBuffer) {
     }
 }
 
-// TODO:
-// Error in extracting text with the pasword-protected PDF
-// Not handling the password correctly
+//Fixed the error where password was not being passed to the function
+// Now lets hope it doesnt break again
 async function extractTextFromPdfBuffer(pdfBuffer, password) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
@@ -224,6 +223,8 @@ async function extractTextFromPdfBuffer(pdfBuffer, password) {
     }
 }
 
+// unlocking the pdf using PDFReader
+// works perfectly but some pdf encryptions may not be supported
 async function unlockPdfWithPassword(pdfData, password) {
     return new Promise((resolve, reject) => {
         const text = [];
