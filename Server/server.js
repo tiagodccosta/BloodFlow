@@ -18,6 +18,7 @@ const { v4: uuidv4 } = require('uuid');
 const jobQueue = new Map();
 const { Readable } = require('stream');
 const PDFParser = require('pdf-parse');
+const {PdfReader} = require('pdfreader');
 
 require('dotenv').config();
 
@@ -215,23 +216,30 @@ async function extractTextFromPdfBuffer(pdfBuffer, password) {
     try {
         const pdfData = new Uint8Array(pdfBuffer);
 
-        const options = {};
-        if (password) {
-            options.password = password;
-        }
-
-        console.log('Extracting text from PDF with options:', options);
-
-        const pdfText = await PDFParser(pdfData, options);
-        return pdfText.text;
+        const extractedText = await unlockPdfWithPassword(pdfData, password);
+        
+        return extractedText;
     } catch (error) {
-        if (error.message.includes('No password given') || error.message.includes('PasswordException')) {
-            console.log('Password is required to open this PDF:', error);
-        } else {
-            console.log('Error in extractTextFromPdfBuffer:', error);
-        }
-        throw error;
+        console.error('Error unlocking PDF with pdf-reader, trying pdf-parse...', error.message);
     }
+}
+
+async function unlockPdfWithPassword(pdfData, password) {
+    return new Promise((resolve, reject) => {
+        const text = [];
+        new PdfReader({ password: password }).parseBuffer(pdfData, (err, item) => {
+            if (err) {
+                console.log('Error parsing PDF:', err.message);
+                return reject(err);
+            }
+            if (!item) {
+                return resolve(text.join('\n'));
+            }
+            if (item.text) {
+                text.push(item.text);
+            }
+        });
+    });
 }
 
 app.post('/extract-text', async (req, res) => {
