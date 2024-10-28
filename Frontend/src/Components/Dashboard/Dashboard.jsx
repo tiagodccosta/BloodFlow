@@ -347,7 +347,7 @@ function Dashboard() {
 
     const convertPDFToText = async (pdfURL) => {
         try {
-            const response = await fetch(`http://localhost:4000/extract-text`, {
+            const response = await fetch(`${BASE_URL}/extract-text`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -360,7 +360,7 @@ function Dashboard() {
                 const password = prompt(message);
                 
                 if (password) {
-                    const unlockResponse = await fetch(`http://localhost:4000/submit-password`, {
+                    const unlockResponse = await fetch(`${BASE_URL}/submit-password`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
