@@ -4,6 +4,7 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { setPersistence, browserLocalPersistence, signInWithCustomToken } from "firebase/auth";
 import { getDoc, doc } from 'firebase/firestore';
 import { db, auth } from "../../firebase";
+import { sendEmailVerification } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
@@ -31,25 +32,35 @@ function LoginPage() {
           },
           body: JSON.stringify({ email: userEmail, password }),
         });
+
         if (!response.ok) {
-          throw new Error('Login failed');
+          throw new Error(t('loginError'));
         }
+        
         const data = await response.json();
         const customToken = data.token;
 
         await setPersistence(auth, rememberMe ? browserLocalPersistence : browserLocalPersistence);
         const userCredential = await signInWithCustomToken(auth, customToken);
         const user = userCredential.user;
+
+        await user.reload();
+        if(!user.emailVerified) {
+          setLoading(false);
+          await sendEmailVerification(user);
+          return toast.error(t('registerToastVerifyEmailYet'));
+        }
+
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.data();
 
         if (userData) {
-          toast.success(`Welcome ${userData.username}!`);
+          toast.success(`${t('bemVindo')} ${userData.username}!`);
           navigate('/dashboard', { state: { user: userData } });
         }
       } catch (error) {
         setLoading(false);
-        toast.error('Login error');
+        toast.error(t('loginError'));
       }
   };
 
