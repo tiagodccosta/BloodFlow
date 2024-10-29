@@ -209,9 +209,6 @@ async function extractTextNoPassword(pdfBuffer) {
     }
 }
 
-// Fixed the error where password was not being passed to the function
-// Now lets hope it doesnt break again
-// Now the other issue is make sure this will work in production
 async function extractTextFromPdfBuffer(pdfBuffer, password) {
     const tempInputPath = path.join(__dirname, 'tempInput.pdf');
     const tempOutputPath = path.join(__dirname, 'tempOutput.pdf');
@@ -595,7 +592,7 @@ app.post('/efp/analyse-blood-test', async (req, res) => {
         if (isPasswordProtected) {
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
         }
-        const extractedText = await extractTextFromPdfBuffer(pdfBuffer);
+        const extractedText = await extractTextNoPassword(pdfBuffer);
         const analysis = await analyzeBloodTestEFP(extractedText, userName, userAge, medicalCondition);
 
         res.json({ analysis });

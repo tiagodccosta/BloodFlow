@@ -17,11 +17,15 @@ import remarkGfm from 'remark-gfm';
 import DeletePopup from './DeletePopup';
 import NewFilePopup from './NewFilePopup';
 import EditPersonalInfo from './EditPersonalInfo';
+
+/*
 import ImageClinica2 from "../../Assets/clinicaSaoCristovao_2.jpeg";
 import ImageClinica3 from "../../Assets/clinicaSaoCristovao_3.jpeg";
 import ImageClinica4 from "../../Assets/clinicaSaoCristovao_4.jpeg";
 import ImageClinica5 from "../../Assets/clinicaSaoCristovao_5.jpeg";
 import bloodTestResults from "../../Assets/bloodTestResults.png";
+*/
+
 import Spinner from '../Spinner';
 import { useTranslation } from 'react-i18next';
 
@@ -46,17 +50,17 @@ function Dashboard() {
     const [index, setIndex] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [showNewFileModal, setShowNewFileModal] = useState(false);
-    const [userLocation, setUserLocation] = useState(null);
-    const [sendingEmail, setSendingEmail] = useState(false);
+    // const [userLocation, setUserLocation] = useState(null);
+    // const [sendingEmail, setSendingEmail] = useState(false);
     const [showEditPopup, setShowEditPopup] = useState(false);
     const [loadingWindow, setLoadingWindow] = useState(true);
-    const [availability, setAvailability] = useState([{ day: '', startTime: '', endTime: '' }]);
-    const [downloadingAnalysis, setDownloadingAnalysis] = useState(false);
+    // const [availability, setAvailability] = useState([{ day: '', startTime: '', endTime: '' }]);
+    // const [downloadingAnalysis, setDownloadingAnalysis] = useState(false);
     const analysisContainerRef = useRef(null);
 
     const { t } = useTranslation();
 
-    const mapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+    // const mapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
     const BASE_URL = process.env.REACT_APP_BASE_URL;
 
     useEffect(() => {
@@ -508,6 +512,7 @@ function Dashboard() {
         setShowEditPopup(false);
     };
 
+    /*
     const checkJobStatus = async (jobId) => {
         try {
             const response = await axios.get(`${BASE_URL}/check-job-status/${jobId}`);
@@ -518,7 +523,6 @@ function Dashboard() {
         }
     };
     
-
     const generateDownloadNewAnalysis = async () => {
 
         try {
@@ -611,6 +615,7 @@ function Dashboard() {
           .map(entry => `${entry.day}: ${entry.startTime} - ${entry.endTime}`)
           .join('\n');
     };
+    */
     
     return (
         loadingWindow ? (
@@ -883,7 +888,9 @@ function Dashboard() {
                             )}
                         </div>
 
-                        {/* Container for partner medical facility */}
+
+                    {/* 
+                        Container for partner medical facility
                         <div className="bg-white mb-4 shadow-md rounded-md p-4 md:p-6">
                             <h1 className="text-xl md:text-xl font-bold text-[#ff0000] mb-4 md:mb-6">{t('partnerClinic')}</h1>
                             <p className="text-gray-500 text-sm md:text-sm font-bold text-center px-4 md:px-10">
@@ -902,7 +909,7 @@ function Dashboard() {
                                     {t('enviarResults2')}
                             </p>
 
-                            {/* Availability Form */}
+                            Availability Form
                             <div className="mt-6 flex flex-col items-center">
                                 <h2 className="text-lg font-bold text-center mb-4 text-[#ce3d3d]">{t('disponibilidade')}</h2>
                                 <div className="flex flex-col items-center w-full">
@@ -972,7 +979,7 @@ function Dashboard() {
                         </div>    
 
 
-                        {/* Container for generating PDF with analysis */}
+                        Container for generating PDF with analysis
                         <div className="bg-white mb-4 shadow-md rounded-md p-4 md:p-6">
                             <h1 className="text-xl md:text-xl font-bold text-[#ff0000] mb-4 md:mb-6">{t('pdfGen')}</h1>
                             <p className="text-gray-500 text-sm md:text-md font-bold text-center px-4 md:px-10">
@@ -990,7 +997,7 @@ function Dashboard() {
                         </div>            
 
 
-                        {/* Map container for showing user medical faciliteis near him */}    
+                        Map container for showing user medical faciliteis near him 
                         <div className="bg-white mb-4 shadow-md rounded-md px-4 py-6 md:px-6 md:py-10">
                             <h1 className="text-xl md:text-xl font-bold text-[#ff0000] mb-4 md:mb-6">{t('otherClinics')}</h1>
                             <p className="text-gray-500 text-sm md:text-sm font-bold text-center px-4 md:px-10">
@@ -1011,6 +1018,7 @@ function Dashboard() {
                                 )}
                             </div>
                         </div>
+                    */}        
 
                         {/* Footer */}
                         <div className="flex justify-center">
