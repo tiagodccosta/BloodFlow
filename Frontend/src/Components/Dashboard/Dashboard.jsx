@@ -50,7 +50,7 @@ function Dashboard() {
     const [index, setIndex] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [showNewFileModal, setShowNewFileModal] = useState(false);
-    // const [userLocation, setUserLocation] = useState(null);
+    //const [userLocation, setUserLocation] = useState(null);
     // const [sendingEmail, setSendingEmail] = useState(false);
     const [showEditPopup, setShowEditPopup] = useState(false);
     const [loadingWindow, setLoadingWindow] = useState(true);
@@ -486,7 +486,8 @@ function Dashboard() {
         }
       };
 
-    useEffect(() => {
+    /*
+      useEffect(() => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             position => {
@@ -503,6 +504,7 @@ function Dashboard() {
           console.error('Geolocation is not supported by this browser.');
         }
     }, []);
+    */
 
     const handleEditClick = () => {
         setShowEditPopup(true);
