@@ -16,6 +16,8 @@ function App() {
         i18n.changeLanguage('en');
       } else if (domain === 'bloodflow.pt' || domain === 'www.bloodflow.pt') {
         i18n.changeLanguage('pt');
+      } else {
+        i18n.changeLanguage('en');
       }
     };
 

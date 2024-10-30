@@ -265,11 +265,11 @@ app.post('/extract-text', async (req, res) => {
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
         } else {
             console.log('Doesnt need password');
+            const extractedText = await extractTextNoPassword(pdfBuffer);
+
+            res.json({ text: extractedText });
         }
 
-        const extractedText = await extractTextNoPassword(pdfBuffer);
-
-        res.json({ text: extractedText });
     } catch (error) {
         console.log('Error extracting text:', error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
@@ -591,11 +591,13 @@ app.post('/efp/analyse-blood-test', async (req, res) => {
 
         if (isPasswordProtected) {
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
+        } else {
+            console.log('Doesnt need password');
+            const extractedText = await extractTextNoPassword(pdfBuffer);
+            const analysis = await analyzeBloodTestEFP(extractedText, userName, userAge, medicalCondition);
+            return res.json({ analysis });
         }
-        const extractedText = await extractTextNoPassword(pdfBuffer);
-        const analysis = await analyzeBloodTestEFP(extractedText, userName, userAge, medicalCondition);
 
-        res.json({ analysis });
     } catch (error) {
         console.error("Error analyzing blood test:", error);
         res.status(500).json({ error: "Failed to analyze blood test" });
