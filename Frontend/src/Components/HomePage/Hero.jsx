@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import AnimatedGradientText from '../magicui/shinyTextButton';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,24 @@ import GradualSpacing from '../magicui/gradual-spacing';
 
 const Hero = () => {
   const { t } = useTranslation();
+
+  const [topButtonVisible, setTopButtonVisible] = useState(false);
+  const [bottomButtonVisible, setBottomButtonVisible] = useState(false);
+
+  useEffect(() => {
+    const topTimer = setTimeout(() => {
+        setTopButtonVisible(true);
+    }, 800);
+
+    const bottomTimer = setTimeout(() => {
+        setBottomButtonVisible(true);
+    }, 3000);
+
+    return () => {
+        clearTimeout(topTimer);
+        clearTimeout(bottomTimer);
+    };
+}, []);
 
   return (
     <div id="Home" className="relative text-black bg-white h-screen flex justify-center items-center overflow-hidden">
@@ -22,8 +40,8 @@ const Hero = () => {
       />
 
       <div className="relative z-10 text-center -mt-40 max-w-[1050px]">
-            <div className="mb-8">
-            <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer">
+          <div className={`mb-8 transition-transform duration-500 ease-out ${topButtonVisible ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'}`}>
+                <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer">
                 <AnimatedGradientText>
                 📅 <hr className="mx-2 h-4 w-[1px] shrink-0 bg-gray-300" />{" "}
                     <span
@@ -46,9 +64,9 @@ const Hero = () => {
                 text={t('subtitle')} />
             </div>
 
-            <div className='mt-8'>
+            <div className={`mt-8 transition-transform duration-500 ease-out ${bottomButtonVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                 <button className='bg-[#ff1717] w-[350px] rounded-lg font-semibold py-3 text-white'>
-                  <RouterLink to="/login">{t('buttonHero2')}</RouterLink>
+                    <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
                 </button>
             </div>
 
