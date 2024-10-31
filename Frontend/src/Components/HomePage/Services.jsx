@@ -67,7 +67,7 @@ const Services = () => {
 
                 <div className="relative flex flex-wrap">
                     <div className="absolute inset-0 bg-gray-800 rounded-md shadow-md transform translate-x-2 translate-y-2"></div>
-                    <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
+                    <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
                         <p><span className="font-bold">Resource constraints</span> impact the clinic's ability to handle high patient volumes.</p>
                     </div>
                 </div>

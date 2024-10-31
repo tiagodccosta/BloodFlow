@@ -65,7 +65,7 @@ const Hero = () => {
             </div>
 
             <div className={`mt-8 transition-transform duration-500 ease-out ${bottomButtonVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-                <button className='bg-[#ff1717] w-[350px] rounded-lg font-semibold py-3 text-white'>
+                <button className='bg-[#ff1717] w-[350px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 py-3 text-white'>
                     <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
                 </button>
             </div>
