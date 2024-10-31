@@ -21,11 +21,15 @@ const Services = () => {
             <h1 className="text-[#000000] font-bold text-center text-lg sm:text-2xl pb-8 mt-10 sm:pb-8">🚀 {t('backed')} 🚀</h1>
             <div className='max-w-[1240px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-44'>
                 <div className='flex justify-center'>
-                    <img className='w-[130px] h-[80px] sm:mt-8 my-4' src={SLUX} alt="WS Lisbon" />
+                    <a href="https://www.startuplisboa.com/" target="_blank" rel="noopener noreferrer">
+                        <img className='w-[130px] h-[80px] sm:mt-8 my-4' src={SLUX} alt="WS Lisbon" />
+                    </a>
                 </div>
 
                 <div className='flex justify-center'>
-                    <img className='w-[220px] my-4 -mt-4' src={UFLX} alt="WS Lisbon" />
+                    <a href="https://unicornfactorylisboa.com/" target="_blank" rel="noopener noreferrer">
+                        <img className='w-[220px] my-4 -mt-3' src={UFLX} alt="WS Lisbon" />
+                    </a>
                 </div>
 
                 <div className='flex justify-center'>
