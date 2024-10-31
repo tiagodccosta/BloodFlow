@@ -1,10 +1,12 @@
 import React from "react";
+/*
 import Laptop from '../../Assets/analytics.jpg'
 import { Link as RouterLink} from 'react-router-dom';
 import TextReveal from '../magicui/text-reveal';
 import BorderBeam from '../magicui/border-beam';
 import DotPattern from '../magicui/dot-pattern';
 import Dashboard from "../../Assets/dashboardBloodFlow.png";
+*/
 import { useTranslation } from "react-i18next";
 import wslisbon from "../../Assets/wslisbon.jpg";
 import SLUX from "../../Assets/SULx_01.png";
@@ -19,7 +21,7 @@ const Services = () => {
         <div id="Services" className='w-full bg-white py-16 px-4'>
 
             <h1 className="text-[#000000] font-bold text-center text-lg sm:text-2xl pb-8 mt-10 sm:pb-8">🚀 {t('backed')} 🚀</h1>
-            <div className='max-w-[1240px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-44'>
+            <div className='max-w-[1240px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-24'>
                 <div className='flex justify-center'>
                     <a href="https://www.startuplisboa.com/" target="_blank" rel="noopener noreferrer">
                         <img className='w-[130px] h-[80px] sm:mt-8 my-4' src={SLUX} alt="WS Lisbon" />
@@ -45,23 +47,33 @@ const Services = () => {
                 </div>
             </div>
 
-            <h1 className="text-[#000000] font-bold text-center text-3xl md:pb-8">{t('sabeMaisServices')}</h1>
-            <div className='max-w-[1240px] mx-auto mb-20 grid md:grid-cols-2'>
-                <img className='w-[500px] mx-auto my-4' src={Laptop} alt="Laptop" />
-                <div className='flex flex-col justify-center ml-4'>
-                    <p className='text-[#ff0000] font-bold'>
-                        {t('dashboardServices')}
-                    </p>
-                    <h1 className="md:text-4xl sm:text-3xl text-2xl font-bold py-2">{t('analiseServices')}</h1>
-                    <p className='md:text-1xl sm:text-1xl text-1xl py-4'>
-                        {t('textServices')}
-                    </p>
-                    <button className='bg-black w-[200px] rounded-md font-bold mt-3 mb-14 mx-auto md:mx-0 py-3 text-white hover:bg-[#ff0000] hover:text-white transition duration-300'>
-                        <RouterLink to="/signup">{t('createAccount')}</RouterLink>
-                    </button>
+            <h1 className="text-[#ce3d3d] font-bold text-center text-2xl sm:text-4xl md:pb-8">{t('sabeMaisServices')}</h1>
+            <h2 className="text-black font-bold text-center text-md sm:text-xl pb-8 mt-6 sm:mt-4">{t('sabeMaisServices2')}</h2>
+
+            <div className="max-w-[1240px] mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 p-6">
+                <div className="relative flex flex-wrap">
+                <div className="absolute inset-0 bg-gray-800 rounded-md shadow-lg transform translate-x-2 translate-y-2"></div>
+                    <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
+                        <p><span className="font-bold">Time-consuming processes</span> delay patient diagnosis and treatment.</p>
+                    </div>
+                </div>
+
+                <div className="relative flex flex-wrap">
+                    <div className="absolute inset-0 bg-gray-800 rounded-md shadow-lg transform translate-x-2 translate-y-2"></div>
+                    <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
+                        <p><span className="font-bold">High potential for human error</span> in repetitive data analysis tasks.</p>
+                    </div>
+                </div>
+
+                <div className="relative flex flex-wrap">
+                    <div className="absolute inset-0 bg-gray-800 rounded-md shadow-md transform translate-x-2 translate-y-2"></div>
+                    <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
+                        <p><span className="font-bold">Resource constraints</span> impact the clinic's ability to handle high patient volumes.</p>
+                    </div>
                 </div>
             </div>
-            
+
+            {/*}
             <DotPattern 
                 width={20} height={20} cx={1} cy={1} cr={1} 
                 style={{
@@ -96,18 +108,8 @@ const Services = () => {
 
             <div className="z-10 flex min-h-[16rem] items-center justify-center bg-white text-gray-500">
                 <TextReveal text={t('servicesScroll')} />
-            </div>
-
-            {/* 
-                TODO: Create another section where we can show and explain more
-                about the servides we offer.
-
-                Like a 3 step with images and text of how BloodFlow works.
-
-                1 - We collect your essencial information for our analysis
-                2 - Centralize all your data in one place
-                3 - In seconds you can have a full analysis of your blood test results
-            */}      
+            </div>  
+            */}
 
         </div>
     )
