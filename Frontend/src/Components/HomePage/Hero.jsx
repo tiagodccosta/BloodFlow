@@ -41,7 +41,8 @@ const Hero = () => {
 
       <div className="relative z-10 text-center -mt-40 max-w-[1050px]">
           <div className={`mb-8 transition-transform duration-500 ease-out ${topButtonVisible ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'}`}>
-                <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer" className="inline-flex items-center" >
                 <AnimatedGradientText>
                 📅 <hr className="mx-2 h-4 w-[1px] shrink-0 bg-gray-300" />{" "}
                     <span
