@@ -19,7 +19,7 @@ const Hero = () => {
 
     const bottomTimer = setTimeout(() => {
         setBottomButtonVisible(true);
-    }, 3000);
+    }, 3500);
 
     return () => {
         clearTimeout(topTimer);
