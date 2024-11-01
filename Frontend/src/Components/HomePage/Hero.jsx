@@ -61,12 +61,12 @@ const Hero = () => {
             </div>
 
             <div className='relative z-10 text-center max-w-[600px] mx-5 sm:mx-auto '>
-                <GradualSpacing className="text-md sm:text-lg md:text-xl font-semibold text-transparent bg-gradient-to-b from-black/80 to-gray-400/80 bg-clip-text leading-none"
+                <GradualSpacing className="text-sm sm:text-md md:text-lg font-semibold text-transparent bg-gradient-to-b from-black/80 to-gray-400/80 bg-clip-text leading-none"
                 text={t('subtitle')} />
             </div>
 
             <div className={`mt-8 transition-transform duration-500 ease-out ${bottomButtonVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-                <button className='bg-[#ff1717] w-[350px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 py-3 text-white'>
+                <button className='bg-[#ff1717] w-[350px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 py-3 text-white'>
                     <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
                 </button>
             </div>
