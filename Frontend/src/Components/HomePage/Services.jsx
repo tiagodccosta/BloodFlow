@@ -49,9 +49,9 @@ const Services = () => {
             </div>
 
             <h1 className="text-[#ce3d3d] font-bold text-center text-2xl sm:text-4xl md:pb-8">{t('sabeMaisServices')}</h1>
-            <h2 className="text-black font-bold text-center text-md sm:text-xl pb-8 mt-6 sm:mt-4">{t('sabeMaisServices2')}</h2>
+            <h2 className="text-black font-bold text-center text-md sm:mb-12 sm:text-xl pb-8 mt-6 sm:mt-4">{t('sabeMaisServices2')}</h2>
 
-            <div className="max-w-[1240px] mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 p-6">
+            <div className="max-w-[1240px] mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 p-6 mb-16">
                 <div className="relative flex flex-wrap">
                 <div className="absolute inset-0 bg-gray-800 rounded-md shadow-lg transform translate-x-2 translate-y-2"></div>
                     <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
@@ -84,14 +84,13 @@ const Services = () => {
                         </div>
                             
                         <div className="text-center sm:text-left">
-                            <h3 className="text-2xl sm:text-4xl font-semibold mb-6">Seamless Integration with Your Current System</h3>
+                            <h3 className="text-2xl sm:text-4xl font-semibold mb-6">{t('card1Sol')}</h3>
                             <p className="text-gray-600 text-lg sm:text-xl">
-                                We connect our AI-powered API to your clinics existing tools, so you can start automating right away—no disruptions to your current workflow & no need
-                                to learn new software. Our solution is designed to work for you, not against you.
+                                {t('card1SolText')}
                             </p>
                             <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer" className="inline-flex items-center">
                                 <p className="text-red-500 text-lg sm:text-xl mt-6 cursor-pointer hover:underline decoration-red-500">
-                                    Book a call with us
+                                    {t('BookDemo')}
                                 </p>
                             </a>
                         </div>
@@ -102,9 +101,9 @@ const Services = () => {
                             <span className="text-xl font-bold text-red-600">2</span>
                         </div>
                         <div className="text-center sm:text-left">
-                            <h3 className="text-2xl sm:text-4xl font-semibold mb-6">Upload Blood Test Results Effortlessly</h3>
+                            <h3 className="text-2xl sm:text-4xl font-semibold mb-6">{t('card2Sol')}</h3>
                             <p className="text-gray-600 text-lg sm:text-xl">
-                                Simply upload blood test results in PDF format, and our AI will automatically process and analyze the data. This hassle-free approach frees up valuable clinic resources and eliminates repetitive tasks for your staff.
+                                {t('card2SolText')}
                             </p>
                             <button className='bg-[#ff1717] w-[200px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 py-3 text-white mt-6'>
                                 <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
@@ -118,9 +117,9 @@ const Services = () => {
                         </div>
                         <div>
                             <div className="text-center sm:text-left">
-                                <h3 className="text-2xl sm:text-4xl font-semibold mb-6">Receive Full, AI-Driven Analysis for Each Blood Test</h3>
+                                <h3 className="text-2xl sm:text-4xl font-semibold mb-6">{t('card3Sol')}</h3>
                                 <p className="text-gray-600 text-lg sm:text-xl">
-                                    Once analyzed, results come back in a comprehensive, easy-to-read report. Our AI ensures accuracy, providing you with precise insights so you can make informed decisions for each patient’s care quickly and confidently.
+                                    {t('card3SolText')}
                                 </p>
                                 <button className='bg-[#ff1717] w-[200px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 py-3 text-white mt-6'>
                                     <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
