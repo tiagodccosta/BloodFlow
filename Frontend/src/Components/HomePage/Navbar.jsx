@@ -53,7 +53,7 @@ const Navbar = () => {
             <img className="w-44 mt-10 -ml-10 sm:-ml-4" src={BloodFlowLogo} alt="/" />
             <ul className='hidden lg:flex'> 
                 <img className='w-10 h-10 mt-2 mr-4 cursor-pointer' src={flag} alt="\" onClick={handleFlagClick} />    
-                <button className='bg-black w-[150px] ml-4 rounded-lg font-bold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-1 py-3 text-white'>
+                <button className='bg-black w-[150px] ml-4 rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-1 py-3 text-white'>
                 <RouterLink to="/login">{t('login')}</RouterLink></button>
             </ul>
             <div on onClick={handleNav} className='block lg:hidden'>
@@ -63,7 +63,7 @@ const Navbar = () => {
                 <img className="w-44" src={BloodFlowLogo} alt="/" />
                 <ul className='px-4'> 
                     <img className='w-10 h-10 ml-3 cursor-pointer' src={flag} alt="\" onClick={handleFlagClick} />     
-                    <button className='bg-black w-[150px] ml-4 rounded-lg font-bold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-6 py-3 text-white'>
+                    <button className='bg-black w-[150px] ml-4 rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-6 py-3 text-white'>
                     <RouterLink to="/login">{t('login')}</RouterLink></button>
                 </ul>
             </div>
