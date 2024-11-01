@@ -514,30 +514,33 @@ async function analyzeBloodTestEFP(text, userName, userAge, medicalCondition) {
                 - Nome do Parâmetro: Valor atual (Unidades)
 
             4. **Resumo**: 
-                - Forneça uma visão geral dos principais resultados.
-                - Destaque o estado geral de saúde.
-                - Assegure que o resumo tem uma redação variada e estrutura diferente a cada vez para evitar repetição.
+                - Forneça uma visão geral dos principais resultados e destaque o estado geral de saúde.
+                - Use uma redação e estrutura ligeiramente diferentes em cada análise para evitar repetições.
 
             5. **Análise Detalhada**:
-                - **Comparação dos Resultados dos Testes**: Para os parâmetros mais relevantes, compare o valor atual com o intervalo de referência normal e valores anteriores (se houver).
-                - **Valores Anormais**: Destaque claramente e explique a significância de quaisquer valores fora do intervalo normal.
-                - **Tendências e Alterações**: Discuta quaisquer tendências ou alterações notáveis em comparação com os resultados de testes anteriores.
-                - **Implicações Potenciais**: Explique as possíveis implicações para a saúde dos resultados anormais.
-                - **Prognósticos**: Forneça uma perspetiva prognóstica com base nos resultados, indicando possíveis desfechos futuros de saúde se a tendência atual continuar.
+                - **Comparação dos Resultados dos Testes**: Compare os valores dos parâmetros mais relevantes com o intervalo de referência normal e com valores anteriores (se disponíveis).
+                - **Valores Anormais**: Destaque e explique a significância de quaisquer valores fora do intervalo normal.
+                - **Tendências e Alterações**: Identifique e discuta mudanças notáveis em comparação com os resultados anteriores.
+                - **Implicações Potenciais**: Explicite possíveis implicações para a saúde dos resultados anormais.
+                - **Prognósticos**: Com base nos resultados, ofereça uma perspectiva prognóstica, indicando potenciais desfechos se as tendências atuais continuarem.
 
             6. **Recomendações**: 
-                - Sugira mais testes ou acompanhamentos que possam ser necessários para confirmar o diagnóstico ou obter mais informações.
-                - Recomende mudanças no estilo de vida, ajustes na dieta ou tratamentos que possam ajudar a melhorar a condição do paciente.
-                - Forneça conselhos médicos específicos ou precauções com base na análise. Assegure que as recomendações sejam práticas e exequíveis.
+                - Sugira testes adicionais ou acompanhamentos relevantes para confirmar o diagnóstico ou obter mais detalhes.
+                - Ofereça sugestões práticas para mudanças de estilo de vida, dieta, ou tratamentos que possam beneficiar a condição do paciente, adequadas à idade e estado do paciente.
+                - Inclua conselhos médicos específicos ou precauções, assegurando que sejam viáveis.
 
             7. **Avisos e Considerações**:
                 - Destaque quaisquer valores críticos que requeiram atenção médica imediata.
-                - Note quaisquer possíveis interferências ou fatores que possam afetar a precisão dos resultados (por exemplo, medicamentos, atividades recentes).
+                - Informe sobre possíveis interferências ou fatores que podem afetar a precisão dos resultados, como medicamentos ou atividades recentes.
 
             Aqui estão os resultados das análises de sangue. O formato é:
             - Nome do Parâmetro: valor anterior 1 / valor anterior 2 valor atual unidades
 
-            Por favor, use apenas o valor atual (o último valor) para a análise e mencione os valores anteriores apenas para comparação, se não houver valores anteriores use apenas o valor dado.
+            Utilize apenas o valor atual (o último valor) para a análise e mencione valores anteriores apenas para comparação. Se não houver valores anteriores, use o valor fornecido.
+
+            Instruções Adicionais:
+                - Adapte a análise para focar especificamente nos aspectos ligados à condição médica mencionada do paciente.
+                - Utilize a estrutura fornecida para garantir consistência em cada relatório e clareza para o leitor.
             `,
         },
         {
