@@ -78,10 +78,8 @@ const Services = () => {
                 <h2 className="text-[#ce3d3d] font-bold text-center text-2xl sm:text-4xl md:pb-8">{t('Solution')}</h2>
 
                 <div className="grid mt-16 sm:grid-cols-1 gap-10 sm:mt-10">
-                    {/* Step 1 */}
                     <div className="flex flex-col sm:flex-row items-center mb-24 sm:mb-32">
                         <div className="w-32 h-32 md:w-52 md:h-52 bg-red-300 rounded-lg mb-4 sm:mb-0 sm:mr-12 flex items-center justify-center flex-shrink-0">
-                                {/* Insert Icon or Image Here */}
                                 <span className="text-xl font-bold text-red-600">1</span>
                         </div>
                             
@@ -92,16 +90,15 @@ const Services = () => {
                                 to learn new software. Our solution is designed to work for you, not against you.
                             </p>
                             <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer" className="inline-flex items-center">
-                            <p className="text-red-500 text-lg sm:text-xl mt-6 cursor-pointer hover:underline decoration-red-500">
-                                Book a call with us
-                            </p>
+                                <p className="text-red-500 text-lg sm:text-xl mt-6 cursor-pointer hover:underline decoration-red-500">
+                                    Book a call with us
+                                </p>
                             </a>
                         </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row-reverse items-center mb-24 sm:mb-32">
                         <div className="w-32 h-32 md:w-52 md:h-52 bg-red-300 rounded-lg mb-4 sm:mb-0 sm:ml-12 flex items-center justify-center flex-shrink-0">
-                            {/* Insert Icon or Image Here */}
                             <span className="text-xl font-bold text-red-600">2</span>
                         </div>
                         <div className="text-center sm:text-left">
@@ -115,10 +112,8 @@ const Services = () => {
                         </div>
                     </div>
 
-                    {/* Step 3 */}
                     <div className="flex flex-col sm:flex-row items-center mb-24 sm:mb-32">
                         <div className="w-32 h-32 md:w-52 md:h-52 bg-red-300 rounded-lg mb-4 sm:mb-0 sm:mr-12 flex items-center justify-center flex-shrink-0">
-                            {/* Insert Icon or Image Here */}
                             <span className="text-xl font-bold text-red-600">3</span>
                         </div>
                         <div>
