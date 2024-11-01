@@ -55,27 +55,27 @@ const Services = () => {
                 <div className="relative flex flex-wrap">
                 <div className="absolute inset-0 bg-gray-800 rounded-md shadow-lg transform translate-x-2 translate-y-2"></div>
                     <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
-                        <p><span className="font-bold">Time-consuming processes</span> delay patient diagnosis and treatment.</p>
+                        <p><span className="font-bold">{t('card1Prob')}</span>{t('card1ProbText')}</p>
                     </div>
                 </div>
 
                 <div className="relative flex flex-wrap">
                     <div className="absolute inset-0 bg-gray-800 rounded-md shadow-lg transform translate-x-2 translate-y-2"></div>
                     <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
-                        <p><span className="font-bold">High potential for human error</span> in repetitive data analysis tasks.</p>
+                        <p><span className="font-bold">{t('card2Prob')}</span>{t('card2ProbText')}</p>
                     </div>
                 </div>
 
                 <div className="relative flex flex-wrap">
                     <div className="absolute inset-0 bg-gray-800 rounded-md shadow-md transform translate-x-2 translate-y-2"></div>
                     <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
-                        <p><span className="font-bold">Resource constraints</span> impact the clinic's ability to handle high patient volumes.</p>
+                        <p><span className="font-bold">{t('card3Prob')}</span>{t('card3ProbText')}</p>
                     </div>
                 </div>
             </div>
 
             <div className="max-w-[950px] mx-auto py-12 px-6">
-                <h2 className="text-[#ce3d3d] font-bold text-center text-2xl sm:text-4xl md:pb-8">Our Solution</h2>
+                <h2 className="text-[#ce3d3d] font-bold text-center text-2xl sm:text-4xl md:pb-8">{t('Solution')}</h2>
 
                 <div className="grid mt-16 sm:grid-cols-1 gap-10 sm:mt-10">
                     {/* Step 1 */}
