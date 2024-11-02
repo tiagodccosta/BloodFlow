@@ -19,7 +19,7 @@ const Services = () => {
     const { t } = useTranslation();
 
     return (
-        <div id="Services" className='w-full bg-white py-16 px-4'>
+        <div id="Services" className='w-full bg-white py-16'>
 
             <h1 className="text-[#000000] font-bold text-center text-lg sm:text-2xl pb-8 mt-10 sm:pb-8">🚀 {t('backed')} 🚀</h1>
             <div className='max-w-[1240px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-24'>
@@ -130,6 +130,23 @@ const Services = () => {
                 </div>
             </div>
 
+            <div className="bg-gray-100 py-12 px-6 md:px-12 lg:px-24 text-center">
+                <h2 className="text-3xl sm:text-4xl font-semibold text-gray-800 mb-6">Annual Savings for Our Clients</h2>
+                <div className="flex flex-col md:flex-row items-center justify-center">
+                    <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 md:w-1/3 m-4">
+                        <span className="text-5xl font-bold text-green-500">€29,000+</span>
+                        <p className="mt-4 text-lg text-gray-600">Average yearly savings per clinic with 500 blood test per month</p>
+                    </div>
+                    <div className="flex-1 text-center mt-8 md:mt-0">
+                        <p className="text-lg sm:text-xl text-gray-700 text-center">
+                            With BloodFlow, clinics save on labor, reduce errors, and streamline workflows through automated blood test analysis. This efficiency leads to substantial annual savings, allowing clinics to focus on delivering exceptional patient care.
+                        </p>
+                        <button className='bg-[#ff1717] w-[200px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 py-3 text-white mt-6'>
+                                <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
+                        </button>
+                    </div>
+                </div>
+            </div>
             {/*}
             <DotPattern 
                 width={20} height={20} cx={1} cy={1} cr={1} 
