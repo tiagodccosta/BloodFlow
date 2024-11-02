@@ -137,13 +137,15 @@ const Services = () => {
                         <span className="text-5xl font-bold text-green-500">€29,000+</span>
                         <p className="mt-4 text-lg text-gray-600">Average yearly savings per clinic with 500 blood test per month</p>
                     </div>
-                    <div className="flex-1 text-center mt-8 md:mt-0">
+                    <div className="flex-1 sm:text-left text-center mt-8 md:mt-0">
                         <p className="text-lg sm:text-xl text-gray-700 text-center">
                             With BloodFlow, clinics save on labor, reduce errors, and streamline workflows through automated blood test analysis. This efficiency leads to substantial annual savings, allowing clinics to focus on delivering exceptional patient care.
                         </p>
-                        <button className='bg-[#ff1717] w-[200px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 py-3 text-white mt-6'>
-                                <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
-                        </button>
+                        <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer" className="inline-flex items-center">
+                            <p className="text-red-500 ml-4 text-lg sm:text-xl mt-6 cursor-pointer hover:underline decoration-red-500">
+                                {t('BookDemo')}
+                            </p>
+                        </a>
                     </div>
                 </div>
             </div>
