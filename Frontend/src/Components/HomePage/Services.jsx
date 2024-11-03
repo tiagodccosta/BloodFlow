@@ -172,7 +172,7 @@ const Services = () => {
                         <li>☑️ Full API integration with your system</li>
                         <li>☑️ Automated AI blood test analysis</li>
                         <li>☑️ Comprehensive reporting</li>
-                        <li>☑️ Ongoing technical support</li>
+                        <li>☑️ Ongoing 24/7 technical support</li>
                     </ul>
 
                     <hr className="border-t border-gray-300 w-3/4 mx-auto my-8 mb-12" />
