@@ -130,25 +130,64 @@ const Services = () => {
                 </div>
             </div>
 
-            <div className="bg-gray-100 py-12 px-6 md:px-12 lg:px-24 text-center">
-                <h2 className="text-3xl sm:text-4xl font-semibold text-gray-800 mb-6">Annual Savings for Our Clients</h2>
+            <div className="bg-black pt-32 pb-24 px-6 md:px-12 lg:px-24 text-center">
+                <h2 className="text-3xl sm:text-4xl font-semibold text-white mb-16">
+                    Annual Savings for Our Clients
+                </h2>
                 <div className="flex flex-col md:flex-row items-center justify-center">
-                    <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-8 md:w-1/3 m-4">
-                        <span className="text-5xl font-bold text-green-500">€29,000+</span>
-                        <p className="mt-4 text-lg text-gray-600">Average yearly savings per clinic with 500 blood test per month</p>
+                    <div className="flex flex-col items-center bg-gray-800 shadow-lg shadow-gray-600 rounded-lg p-8 md:w-1/3 m-4">
+                        <span className="text-5xl font-bold text-[#38ff72]">€29,000+</span>
+                        <p className="mt-4 text-lg text-gray-300 text-center">
+                            Average yearly savings per clinic with 500 blood tests per month
+                        </p>
                     </div>
                     <div className="flex-1 sm:text-left text-center mt-8 md:mt-0">
-                        <p className="text-lg sm:text-xl text-gray-700 text-center">
+                        <p className="text-lg sm:text-xl text-gray-400">
                             With BloodFlow, clinics save on labor, reduce errors, and streamline workflows through automated blood test analysis. This efficiency leads to substantial annual savings, allowing clinics to focus on delivering exceptional patient care.
                         </p>
                         <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer" className="inline-flex items-center">
-                            <p className="text-red-500 ml-4 text-lg sm:text-xl mt-6 cursor-pointer hover:underline decoration-red-500">
+                            <p className="text-[#ff0000] text-lg sm:text-xl mt-6 cursor-pointer hover:underline decoration-[#ff0000]">
                                 {t('BookDemo')}
                             </p>
                         </a>
                     </div>
                 </div>
             </div>
+
+            <div className="bg-black py-16 px-6 md:px-12 lg:px-24 text-center">
+                <h2 className="text-3xl sm:text-4xl font-semibold text-white mb-2">
+                    Tailored Pricing for Your Success
+                </h2>
+                <p className="text-gray-400 text-lg mb-12">
+                    Customizable plans to suit your clinic's needs
+                </p>
+                    
+                <div className="mx-auto items-center bg-white rounded-lg px-8 py-12 w-full max-w-[400px] shadow-lg shadow-gray-400">
+                    <h3 className="text-3xl font-semibold text-gray-900 mb-2">Request a Quote</h3>
+                    <p className="text-gray-600 mb-6">Price based on your needs</p>
+
+                    <hr className="border-t border-gray-300 w-3/4 mx-auto my-8" />
+
+                    <ul className="text-left text-gray-600 space-y-4 mb-8 mt-10">
+                        <li>☑️ Full API integration with your system</li>
+                        <li>☑️ Automated AI blood test analysis</li>
+                        <li>☑️ Comprehensive reporting</li>
+                        <li>☑️ Ongoing technical support</li>
+                    </ul>
+
+                    <hr className="border-t border-gray-300 w-3/4 mx-auto my-8 mb-12" />
+
+                    <a 
+                        href="https://calendly.com/tiago-costa-bloodflow" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-white font-semibold bg-[#ff0000] hover:bg-red-600 py-2 px-6 rounded-full transition-colors duration-300"
+                    >
+                        Request a Quote
+                    </a>
+                </div>
+            </div>
+
             {/*}
             <DotPattern 
                 width={20} height={20} cx={1} cy={1} cr={1} 
