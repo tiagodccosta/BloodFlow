@@ -10,18 +10,6 @@ module.exports = {
       mono: ['Menlo', 'monospace'],
     },
     extend: {
-
-      animation: {
-        gradient: "gradient 8s linear infinite",
-      },
-      keyframes: {
-        gradient: {
-          to: {
-            backgroundPosition: "var(--bg-size) 0",
-          },
-        },
-      },
-
       borderWidth: {
         "15": "15px",
       },
@@ -29,6 +17,11 @@ module.exports = {
         lg: "20px",
       },
       keyframes: {
+        gradient: {
+          to: {
+            backgroundPosition: "var(--bg-size) 0",
+          },
+        },
         'gradient-move': {
           '0%, 100%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
@@ -59,6 +52,7 @@ module.exports = {
         'gradient-pulse': 'gradient-pulse 4s linear infinite',
         'marquee': 'marquee var(--duration) linear infinite',
         "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
+        gradient: "gradient 8s linear infinite",
       },
     },
   },

@@ -3,8 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './Components/HomePage/Navbar';
 import Hero from './Components/HomePage/Hero';
 import Services from './Components/HomePage/Services';
-import Newsletter from './Components/HomePage/Newsletter';
-import Cards from './Components/HomePage/Cards';
+import FAQ from './Components/HomePage/FAQSection';
 import Footer from './Components/HomePage/Footer';
 import SignUpPage from './Components/SignUpPage/SignUpPage';
 import LoginPage from './Components/LoginPage/LoginPage';
@@ -17,8 +16,7 @@ const HomePage = () => (
     <Navbar />
     <Hero />
     <Services />
-    <Newsletter />
-    <Cards />
+    <FAQ />
     <Footer />
   </div>
 );
