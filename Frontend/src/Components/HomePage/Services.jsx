@@ -1,12 +1,4 @@
 import React from "react";
-/*
-import Laptop from '../../Assets/analytics.jpg'
-import { Link as RouterLink} from 'react-router-dom';
-import TextReveal from '../magicui/text-reveal';
-import BorderBeam from '../magicui/border-beam';
-import DotPattern from '../magicui/dot-pattern';
-import Dashboard from "../../Assets/dashboardBloodFlow.png";
-*/
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import wslisbon from "../../Assets/wslisbon.jpg";
@@ -132,18 +124,18 @@ const Services = () => {
 
             <div className="bg-black pt-32 pb-24 px-6 md:px-12 lg:px-24 text-center">
                 <h2 className="text-3xl sm:text-4xl font-semibold text-white mb-16">
-                    Annual Savings for Our Clients
+                    {t('AnuallSav')}
                 </h2>
                 <div className="flex flex-col md:flex-row items-center justify-center">
                     <div className="flex flex-col items-center bg-gray-800 shadow-lg shadow-gray-600 rounded-lg p-8 md:w-1/3 m-4">
                         <span className="text-5xl font-bold text-[#38ff72]">€29,000+</span>
                         <p className="mt-4 text-lg text-gray-300 text-center">
-                            Average yearly savings per clinic with 500 blood tests per month
+                            {t('AnuallSavText')}
                         </p>
                     </div>
                     <div className="flex-1 sm:text-left text-center mt-8 md:mt-0">
                         <p className="text-lg sm:text-xl text-gray-400">
-                            With BloodFlow, clinics save on labor, reduce errors, and streamline workflows through automated blood test analysis. This efficiency leads to substantial annual savings, allowing clinics to focus on delivering exceptional patient care.
+                            {t('AnuallSavText2')}
                         </p>
                         <a href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer" className="inline-flex items-center">
                             <p className="text-[#ff0000] text-lg sm:text-xl mt-6 cursor-pointer hover:underline decoration-[#ff0000]">
@@ -156,23 +148,23 @@ const Services = () => {
 
             <div className="bg-black py-16 px-6 md:px-12 lg:px-24 text-center">
                 <h2 className="text-3xl sm:text-4xl font-semibold text-white mb-2">
-                    Tailored Pricing for Your Success
+                {   t('TailoredPrice')}
                 </h2>
                 <p className="text-gray-400 text-lg mb-12">
-                    Customizable plans to suit your clinic's needs
+                    {t('TailoredPriceText')}
                 </p>
                     
                 <div className="mx-auto items-center bg-white rounded-lg px-8 py-12 w-full max-w-[400px] shadow-lg shadow-gray-400">
-                    <h3 className="text-3xl font-semibold text-gray-900 mb-2">Request a Quote</h3>
-                    <p className="text-gray-600 mb-6">Price based on your needs</p>
+                    <h3 className="text-3xl font-semibold text-gray-900 mb-2">{t('RequesQuote')}</h3>
+                    <p className="text-gray-600 mb-6">{t('PriceBN')}</p>
 
                     <hr className="border-t border-gray-300 w-3/4 mx-auto my-8" />
 
                     <ul className="text-left text-gray-600 space-y-4 mb-8 mt-10">
-                        <li>☑️ Full API integration with your system</li>
-                        <li>☑️ Automated AI blood test analysis</li>
-                        <li>☑️ Comprehensive reporting</li>
-                        <li>☑️ Ongoing 24/7 technical support</li>
+                        <li>☑️ {t('card1')}</li>
+                        <li>☑️ {t('card2')}</li>
+                        <li>☑️ {t('card3')}</li>
+                        <li>☑️ {t('card4')}t</li>
                     </ul>
 
                     <hr className="border-t border-gray-300 w-3/4 mx-auto my-8 mb-12" />
@@ -183,49 +175,10 @@ const Services = () => {
                         rel="noopener noreferrer" 
                         className="text-white font-semibold bg-[#ff0000] hover:bg-red-600 py-2 px-6 rounded-full transition-colors duration-300"
                     >
-                        Request a Quote
+                        {t('RequesQuote')}
                     </a>
                 </div>
             </div>
-
-            {/*}
-            <DotPattern 
-                width={20} height={20} cx={1} cy={1} cr={1} 
-                style={{
-                    maskImage: 'linear-gradient(to bottom right, white, white, transparent)'
-                  }}
-                >  
-
-                <div className="flex justify-center items-center min-h-screen bg-white">
-                    <h1 className="text-[#ce3d3d] font-bold text-center text-5xl mt-10 md:mt-10 sm:mt-10 absolute top-0 left-0 right-0 md:text-6xl">
-                        {t('dashboardBloodFlow')}
-                    </h1>
-                    <p className="text-[#000000] font-bold text-center text-md mt-44 md:mt-30 sm:mt-28 absolute top-0 left-0 right-0 md:text-2xl">
-                        {t('servicesSlogan')}
-                    </p>
-                    <div className="relative rounded-xl sm:mt-20">
-                    <img
-                        src={Dashboard}
-                        alt=""
-                        className="w-[1000px] rounded-[inherit] border object-contain shadow-xl dark:block"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 w-full h-24 rounded-b-[inherit] shadow-lg shadow-neutral-500" />
-                        <div className="w-full">
-                            <BorderBeam
-                            size={500}
-                            duration={12}
-                            delay={9}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </DotPattern>
-
-            <div className="z-10 flex min-h-[16rem] items-center justify-center bg-white text-gray-500">
-                <TextReveal text={t('servicesScroll')} />
-            </div>  
-            */}
-
         </div>
     )
 };

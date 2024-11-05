@@ -7,24 +7,24 @@ const FAQSection = () => {
 
     const faqs = [
         {
-            question: "Who manages the integration process?",
-            answer: "Our dedicated AI integration specialists will work closely with your clinic to ensure a smooth, fast setup process with minimal downtime."
+            question: t('Question1'),
+            answer: t('Answer1')
         },
         {
-            question: "How long does the setup take?",
-            answer: "Our integration typically takes between 1-2 weeks, depending on your current system’s configuration and readiness."
+            question: t('Question2'),
+            answer: t('Answer2')
         },
         {
-            question: "How accurate is the AI analysis?",
-            answer: "Our AI technology is thoroughly tested and benchmarked to deliver accuracy levels that match or exceed traditional manual analysis, ensuring reliable results for your clinic."
+            question: t('Question3'),
+            answer: t('Answer3')
         },
         {
-            question: "Is there ongoing support?",
-            answer: "Yes, our team provides continuous support and maintenance to keep your system running smoothly, with regular software updates and troubleshooting assistance."
+            question: t('Question4'),
+            answer: t('Answer4')
         },
         {
-            question: "Can the system handle fluctuating patient volumes?",
-            answer: "Absolutely. Our AI solution is designed to scale effortlessly with your clinic’s demand, so you get fast, reliable analysis even during peak times."
+            question: t('Question5'),
+            answer: t('Answer5')
         }
     ];
 
