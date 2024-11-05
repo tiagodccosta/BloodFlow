@@ -42,7 +42,7 @@ const FAQSection = () => {
                     <div key={index} className="bg-black rounded-lg overflow-hidden border border-gray-900 hover:border-gray-600">
                         <button 
                             onClick={() => toggleAccordion(index)}
-                            className="w-full flex justify-between items-center p-4 text-white text-md font-semibold focus:outline-none transition-all"
+                            className="w-full flex justify-between items-center p-4 text-white text-sm sm:text-md font-semibold focus:outline-none transition-all"
                         >
                             <span>{faq.question}</span>
                             <span className={`transform transition-transform duration-300 ${openIndex === index ? 'rotate-180' : ''}`}>
@@ -50,7 +50,7 @@ const FAQSection = () => {
                             </span>
                         </button>
                         {openIndex === index && (
-                            <div className="p-4 text-gray-300 text-sm transition-opacity duration-300 ease-in-out">
+                            <div className="p-4 text-gray-300 text-xs sm:text-sm transition-opacity duration-300 ease-in-out">
                                 {faq.answer}
                             </div>
                         )}

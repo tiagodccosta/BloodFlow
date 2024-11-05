@@ -4,7 +4,7 @@ import BloodFlowLogo from "../../Assets/BloodflowLogo.png";
 
 const Footer = () => {
     return (
-        <div className="bg-black w-full py-16 flex flex-col items-center text-center text-white">
+        <div className="bg-black w-full h-full flex flex-col items-center text-center text-white pt-16">
             <h3 className="text-2xl sm:text-4xl font-bold mb-4 max-w-[650px]">
                 Ready to transform your blood test analysis with AI?
             </h3>
@@ -20,7 +20,7 @@ const Footer = () => {
                 Book a call with us
             </a>
             
-            <div className="bg-blue-800 w-full flex flex-col md:flex-row items-center justify-between text-left mt-36 px-6 md:px-12 lg:px-24">
+            <div className="bg-gray-900 w-full flex items-center justify-between text-left mt-36 px-6 md:px-12 lg:px-24 py-16">
                 <img className="w-36 md:w-44" src={BloodFlowLogo} alt="BloodFlow Logo" />
 
                 <div className="text-white-400 mt-6 md:mt-0">
