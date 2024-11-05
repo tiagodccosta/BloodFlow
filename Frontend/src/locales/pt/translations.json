@@ -169,5 +169,10 @@
     "Question4": "Oferecem suporte técnico contínuo?",
     "Answer4": "Sim, a nossa equipa de suporte técnico está disponível 24/7 para ajudar com quaisquer problemas ou perguntas que possa ter.",
     "Question5": "O sistema consegue lidar com volumes de pacientes flutuantes?",
-    "Answer5": "Absolutamente. A nossa solução de IA foi concebida para escalar sem esforço de acordo com a demanda da sua clínica, garantindo análises rápidas e fiáveis mesmo durante os períodos de maior procura."
+    "Answer5": "Absolutamente. A nossa solução de IA foi concebida para escalar sem esforço de acordo com a demanda da sua clínica, garantindo análises rápidas e fiáveis mesmo durante os períodos de maior procura.",
+    "ReadyToTransform": "Pronto para transformar a forma como a sua clínica analisa exames sanguíneos?",
+    "ReadyToTransform2": "Entre em contacto connosco hoje para agendar uma demonstração e ver como a nossa solução baseada em IA pode otimizar o processo de análise de análises sanguíneas da sua clínica.",
+    "footerAddress": "Rua da Prata 80",
+    "footerAddress2": "Lisboa, Portugal",
+    "footerEmail": "info@bloodflow.pt"
 }

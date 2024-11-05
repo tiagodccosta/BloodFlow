@@ -169,6 +169,10 @@
     "Question4": "Is there ongoing support?",
     "Answer4": "Yes, our team provides continuous support and maintenance to keep your system running smoothly, with regular software updates and troubleshooting assistance.",
     "Question5": "Can the system handle fluctuating patient volumes?",
-    "Answer5": "Absolutely. Our AI solution is designed to scale effortlessly with your clinic’s demand, so you get fast, reliable analysis even during peak times."
-
+    "Answer5": "Absolutely. Our AI solution is designed to scale effortlessly with your clinic’s demand, so you get fast, reliable analysis even during peak times.",
+    "ReadyToTransform": "Ready to transform your blood test analysis with AI?",
+    "ReadyToTransform2": "Contact us today to schedule a demo and see how our AI-driven solution can streamline your clinic’s blood test analysis process.",
+    "footerAddress": "Rua da Prata 80",
+    "footerAddress2": "Lisbon, Portugal",
+    "footerEmail": "info@bloodflow.pt"
 }
