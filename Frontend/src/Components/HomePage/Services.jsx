@@ -164,7 +164,7 @@ const Services = () => {
                         <li>☑️ {t('card1')}</li>
                         <li>☑️ {t('card2')}</li>
                         <li>☑️ {t('card3')}</li>
-                        <li>☑️ {t('card4')}t</li>
+                        <li>☑️ {t('card4')}</li>
                     </ul>
 
                     <hr className="border-t border-gray-300 w-3/4 mx-auto my-8 mb-12" />
