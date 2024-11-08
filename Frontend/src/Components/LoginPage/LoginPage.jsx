@@ -45,6 +45,7 @@ function LoginPage() {
         const user = userCredential.user;
 
         await user.reload();
+
         if(!user.emailVerified) {
           setLoading(false);
           await sendEmailVerification(user);
@@ -56,7 +57,12 @@ function LoginPage() {
 
         if (userData) {
           toast.success(`${t('bemVindo')} ${userData.username}!`);
-          navigate('/dashboard', { state: { user: userData } });
+    
+          if (userData.role === 'clinic') {
+            navigate('/fertility-care-dashboard', { state: { user: userData } });
+          } else {
+            navigate('/dashboard', { state: { user: userData } });
+          }
         }
       } catch (error) {
         setLoading(false);
