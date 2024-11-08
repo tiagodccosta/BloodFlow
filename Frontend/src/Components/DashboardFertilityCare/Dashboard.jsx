@@ -6,6 +6,7 @@ import Spinner from '../Spinner';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getAuth } from 'firebase/auth';
+import DeletePopup from '../Dashboard/DeletePopup';
 
 const Dashboard = () => {
     const [loadingWindow, setLoadingWindow] = useState(true);
@@ -15,6 +16,7 @@ const Dashboard = () => {
     const [patientTests, setPatientTests] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
+    const [showModal, setShowModal] = useState(false);
 
     const fetchPatients = async () => {
         try {
@@ -73,32 +75,48 @@ const Dashboard = () => {
     const handleUploadNewTest = async (patientId) => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
-        fileInput.accept = '.xlsx';
+        fileInput.accept = '.pdf';
         fileInput.onchange = async () => {
             const file = fileInput.files[0];
             if (file) {
-                await uploadExcelFile(patientId, file);
+                await uploadBloodTest(patientId, file);
             }
         };
         fileInput.click();
     };
 
-    const uploadExcelFile = async (patientId, file) => {
+    const uploadBloodTest = async (patientId, file) => {
         try {
             const fileRef = storage.ref(`FertilityCare/${patientId}/${file.name}`);
             await fileRef.put(file);
             const fileURL = await fileRef.getDownloadURL();
-            await db.collection('FertilityCare').doc(patientId).update({ excelFile: fileURL });
-            console.log("Excel file uploaded successfully.");
+            await db.collection('FertilityCare').doc(patientId).update({ bloodTest: fileURL });
+            console.log("Blood Test uploaded successfully.");
         } catch (error) {
             console.error("Error uploading file:", error);
         }
     };
 
-    const handlePatientSelect = (patient) => {
+    const handlePatientSelect = async (patient) => {
         setSelectedPatient(patient);
-        // Fetch test data for selected patient, if available
-        setPatientTests([]); // Reset test data if switching patients
+        setPatientTests([]);
+        setLoadingWindow(true);
+    
+        try {
+            const testsCollectionRef = collection(db, 'FertilityCare', patient.id, 'tests');
+            const snapshot = await getDocs(testsCollectionRef);
+    
+            const fetchedTests = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+    
+            setPatientTests(fetchedTests);
+        } catch (error) {
+            console.error("Error fetching patient tests:", error);
+        } finally {
+            setLoadingWindow(false);
+        }
     };
 
     const handleSearchChange = (event) => {
@@ -130,6 +148,21 @@ const Dashboard = () => {
         }
     };
 
+    const handleDeleteClick = () => {
+        setShowModal(true);
+    }
+
+    const confirmDeletePatient = async (patientId) => {
+        try {
+            await db.collection('FertilityCare').doc(patientId).delete();
+            toast.success("Patient deleted successfully.");
+            fetchPatients();
+            setSelectedPatient(null);
+        } catch (error) {
+            console.error("Error deleting patient:", error);
+            toast.error("Error deleting patient.");
+        }
+    }
 
     return (
         loadingWindow ? (
@@ -186,50 +219,80 @@ const Dashboard = () => {
                 {/* Main Container */}
                 <div className="main-container bg-gray-300 flex-grow overflow-y-auto pt-6 px-4 md:w-4/5 flex flex-col">
                     
-                    {/* Title */}
-                    <div className="bg-white w-full mb-6 shadow-md rounded-md">
-                        <div className='flex justify-between items-center font-bold text-lg md:text-2xl text-[#ce3d3d] p-6'>
-                            {selectedPatient ? (
-                                <h1>{`Patient: ${selectedPatient.name}`}</h1>
-                            ) : (
-                                <h1>FertilityCare Dashboard</h1>
-                            )}
-                        </div>
+                    {/* Title Container */}
+                    <div className="bg-white w-full mb-6 shadow-md rounded-md px-6 py-4">
+                        <h1 className="font-bold text-lg md:text-2xl text-[#ce3d3d]">
+                            FertilityCare Dashboard
+                        </h1>
                     </div>
-    
-                    {/* Patient-specific data */}
-                    {selectedPatient ? (
-                        <>
-                            {/* Upload New Blood Test for Patient */}
-                            <div className="flex justify-center mb-4">
-                                <button 
-                                    onClick={() => handleUploadNewTest(selectedPatient.id)} 
-                                    className="bg-[#ff0000] w-40 rounded-md font-bold py-2 text-white"
-                                >
-                                    Upload Blood Test
-                                </button>
+
+                    {/* Patient Information Container */}
+                    <div className="bg-white flex flex-col mb-4 shadow-md rounded-md md:flex-row">
+                        {selectedPatient ? (
+                            <>
+                                {/* Left Container: Patient Details */}
+                                <div className="w-full md:w-2/3 p-2 md:p-6 flex flex-col">
+                                    <div className="border-2 border-[#ff0000] rounded-lg p-2 md:p-4 md:border-4 flex-grow">
+                                        <h1 className="text-md md:text-xl font-bold text-black py-1 md:py-2">Patient Information</h1>
+                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
+                                            <span className="font-bold mr-2">Name:</span>
+                                            <span className="font-medium">{selectedPatient.name}</span>
+                                        </p>
+                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
+                                            <span className="font-bold mr-2">Age:</span>
+                                            <span className="font-medium">{selectedPatient.age}</span>
+                                        </p>
+                                        <h1 className="text-xs font-medium md:text-xs md:font-bold text-gray-500 py-1 md:py-2">
+                                            Blood Tests
+                                        </h1>
+                                        <ul className="list-disc ml-5 mt-2">
+                                            {patientTests && patientTests.length > 0 ? (
+                                                patientTests.map((test, index) => (
+                                                    <li key={index} className="text-sm md:text-base text-gray-600">
+                                                        {test.date}
+                                                    </li>
+                                                ))
+                                            ) : (
+                                                <p className="text-gray-500 text-sm">No test data available.</p>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* Right Container: Actions */}
+                                <div className="w-full md:w-1/3 p-2 md:p-6 md:pl-4 flex flex-col items-center justify-center">
+                                    <p className="font-bold text-black text-lg md:text-xl mb-2 md:mb-4 text-center">Upload Patient Blood Test</p>
+                                    <button 
+                                        onClick={() => handleUploadNewTest(selectedPatient.id)} 
+                                        className="bg-[#ff0000] w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white"
+                                    >
+                                        Upload Blood Test
+                                    </button>
+                                    <button 
+                                        onClick={handleDeleteClick} 
+                                        className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white mt-1 md:mt-2 md:-mb-8 bg-black"
+                                    >
+                                        Delete Patient
+                                    </button>
+                                    {showModal && (
+                                        <DeletePopup
+                                            show={showModal}
+                                            onClose={() => setShowModal(false)}
+                                            onConfirm={() => confirmDeletePatient(selectedPatient.id)}
+                                        />
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex-grow p-2 md:p-5">
+                                <h1 className="text-lg md:text-xl font-bold text-black">Patient Information</h1>
+                                <div className="w-full p-2 md:p-6 flex items-center justify-center">
+                                    <h1 className="text-lg md:text-xl font-bold text-gray-500 p-4 md:p-10">No Patient Selected</h1>
+                                </div>
                             </div>
-    
-                            {/* Test Results and Analysis */}
-                            <div className="bg-white mb-6 shadow-md rounded-md p-6" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                {patientTests.length > 0 ? (
-                                    <ul>
-                                        {patientTests.map((test, index) => (
-                                            <li key={index}>
-                                                {test.date}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p>No test data available.</p>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="text-center text-gray-500 mt-10">
-                            <p>Select a patient to view their information and test results.</p>
-                        </div>
-                    )}
+                        )}
+                    </div>
+
                 </div>
             </div>
         )
