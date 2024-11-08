@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, storage } from '../../firebase';
 import { addDoc, collection, getDocs } from 'firebase/firestore';
 import BloodFlowLogo from "../../Assets/BloodflowLogo.png";
+import { ref, uploadBytes } from 'firebase/storage';
 import Spinner from '../Spinner';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -87,11 +88,11 @@ const Dashboard = () => {
 
     const uploadBloodTest = async (patientId, file) => {
         try {
-            const fileRef = storage.ref(`FertilityCare/${patientId}/${file.name}`);
-            await fileRef.put(file);
-            const fileURL = await fileRef.getDownloadURL();
-            await db.collection('FertilityCare').doc(patientId).update({ bloodTest: fileURL });
-            console.log("Blood Test uploaded successfully.");
+            const fileRef = ref(storage, `FertilityCare/${patientId}/${file.name}`);
+            
+            await uploadBytes(fileRef, file);
+    
+            console.log("Blood Test file uploaded successfully.");
         } catch (error) {
             console.error("Error uploading file:", error);
         }
@@ -100,7 +101,6 @@ const Dashboard = () => {
     const handlePatientSelect = async (patient) => {
         setSelectedPatient(patient);
         setPatientTests([]);
-        setLoadingWindow(true);
     
         try {
             const testsCollectionRef = collection(db, 'FertilityCare', patient.id, 'tests');
@@ -114,8 +114,6 @@ const Dashboard = () => {
             setPatientTests(fetchedTests);
         } catch (error) {
             console.error("Error fetching patient tests:", error);
-        } finally {
-            setLoadingWindow(false);
         }
     };
 
