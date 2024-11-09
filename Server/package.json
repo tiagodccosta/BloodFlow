@@ -32,7 +32,8 @@
     "pdf-parse": "^1.1.1",
     "stripe": "^15.6.0",
     "uuid": "^10.0.0",
-    "wrk": "^1.2.1"
+    "wrk": "^1.2.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

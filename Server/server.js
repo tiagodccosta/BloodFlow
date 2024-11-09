@@ -19,6 +19,7 @@ const jobQueue = new Map();
 const { Readable } = require('stream');
 const pdfParser = require('pdf-parse');
 const { exec } = require('child_process');
+const XLSX = require('xlsx');
 
 require('dotenv').config();
 
@@ -573,6 +574,7 @@ async function checkPDFPasswordProtection(pdfBuffer) {
     }
 }
 
+
 app.post('/efp/submit-password', async (req, res) => {
     const { pdfFile, password, userName, userAge, medicalCondition } = req.body;
   
@@ -607,6 +609,94 @@ app.post('/efp/analyse-blood-test', async (req, res) => {
     } catch (error) {
         console.error("Error analyzing blood test:", error);
         res.status(500).json({ error: "Failed to analyze blood test" });
+    }
+});
+
+const parseParametersAndValues = (text) => {
+    const regex = /(\b[A-ZÁ-Úa-zá-ú]+(?:\s[A-ZÁ-Úa-zá-ú]+)*)\s+(\d{1,2},\d)\s+([a-zA-Z%/x¹²³\d.]+)/g;
+    
+    const results = [];
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        const parameter = match[1].trim();
+        const value = `${match[2].replace(',', '.')}`;
+        const unit = match[3].trim();
+
+        results.push({ parameter, value: `${value} ${unit}` });
+    }
+
+    return results;
+};
+
+const createExcelBuffer = (data) => {
+    const workbook = XLSX.utils.book_new();
+    const worksheetData = [["Parameter", "Value"], ...data.map(d => [d.parameter, d.value])];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Blood Test Results");
+    return XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+};
+
+const checkIfExcelExists = async (patientId, excelFileName) => {
+    const filePath = `FertilityCare/${patientId}/${excelFileName}.xlsx`;
+    const bucket = storage.bucket(bucketName);
+    const file = bucket.file(filePath);
+    const [exists] = await file.exists();
+    return exists;
+};
+
+const uploadExcelFile = async (patientId, excelBuffer, excelFileName) => {
+    const filePath = `FertilityCare/${patientId}/${excelFileName}.xlsx`;
+    const bucket = storage.bucket(bucketName);
+    const file = bucket.file(filePath);
+    
+    await file.save(Buffer.from(excelBuffer), {
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+
+    await file.makePublic();
+
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+    console.log('Excel file uploaded successfully:', publicUrl);
+    return publicUrl;
+};
+
+app.post('/fertility-care/generate-excel', async (req, res) => {
+    const { patientId, fileURL, excelFileName } = req.body;
+
+    try {
+        const pdfResponse = await axios.get(fileURL, { responseType: 'arraybuffer' });
+        const pdfBuffer = pdfResponse.data;
+
+        const data = await pdfParser(pdfBuffer);
+        const parsedData = parseParametersAndValues(data.text);
+
+        const excelBuffer = createExcelBuffer(parsedData);
+
+        const excelExists = await checkIfExcelExists(patientId, excelFileName);
+
+        let publicUrl;
+
+        if (excelExists) {
+            const [existingDataBuffer] = await storage.bucket(bucketName).file(`FertilityCare/${patientId}/${excelFileName}.xlsx`).download();
+            const existingWorkbook = XLSX.read(existingDataBuffer, { type: 'buffer' });
+
+            const existingSheet = existingWorkbook.Sheets['Blood Test Results'];
+            const newRows = parsedData.map(d => [d.parameter, d.value]);
+            const lastRow = XLSX.utils.sheet_to_json(existingSheet, { header: 1 }).length;
+
+            XLSX.utils.sheet_add_aoa(existingSheet, newRows, { origin: -1 });
+
+            const updatedExcelBuffer = XLSX.write(existingWorkbook, { bookType: 'xlsx', type: 'array' });
+            publicUrl = await uploadExcelFile(patientId, updatedExcelBuffer, excelFileName);
+        } else {
+            publicUrl = await uploadExcelFile(patientId, excelBuffer, excelFileName);
+        }
+
+        res.status(200).send({ message: "Excel file generated and saved successfully.", fileUrl: publicUrl });
+    } catch (error) {
+        console.error("Error generating Excel file:", error);
+        res.status(500).send({ error: "Failed to generate Excel file." });
     }
 });
 

@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { db, storage } from '../../firebase';
 import { addDoc, collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import BloodFlowLogo from "../../Assets/BloodflowLogo.png";
-import { ref, uploadBytes, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
+import { ref, uploadBytes, listAll, getDownloadURL, getMetadata, deleteObject } from 'firebase/storage';
 import Spinner from '../Spinner';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getAuth } from 'firebase/auth';
 import DeletePatientPopup from './DeletePatientPopup';
 import NewFilePopup from '../Dashboard/NewFilePopup';
+import DeleteTestPopup from '../Dashboard/DeletePopup';
 
 const Dashboard = () => {
     const [loadingWindow, setLoadingWindow] = useState(true);
@@ -21,6 +22,8 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showNewFileModal, setShowNewFileModal] = useState(false);
+    const [showDeleteTestModal, setShowDeleteTestModal] = useState(false);
+    const [excelFileName, setExcelFileName] = useState("");
 
     const fetchPatients = async () => {
         try {
@@ -152,6 +155,7 @@ const Dashboard = () => {
 
     const handleTestSelect = (test) => {
         setSelectedPatientTest(test);
+        setShowDeleteTestModal(true);
     };
 
     const handleSearchChange = (event) => {
@@ -173,7 +177,6 @@ const Dashboard = () => {
 
     const handleLogout = async () => {
         try {
-            // Logout user
             const auth = getAuth();
             await auth.signOut();
             toast.success("You have been logged out.");
@@ -186,6 +189,11 @@ const Dashboard = () => {
     const handleDeleteClick = () => {
         setShowDeleteModal(true);
     }
+
+    const handleBloodTestSelection = (testName) => {
+        const selectedTest = patientTests.find((test) => test.name === testName);
+        setSelectedPatientTest(selectedTest);
+    };
 
     const confirmDeletePatient = async (patientId) => {
         try {
@@ -201,6 +209,24 @@ const Dashboard = () => {
         }
     }
 
+    const confirmDeleteTest = async () => {
+        try {
+            if (selectedPatientTest) {
+                const testRef = ref(storage, `FertilityCare/${selectedPatient.id}/${selectedPatientTest.name}`);
+                await deleteObject(testRef);
+                toast.success("Blood test deleted successfully.");
+    
+                setPatientTests((tests) => tests.filter(test => test !== selectedPatientTest));
+    
+                setShowDeleteTestModal(false);
+                setSelectedPatientTest(null);
+            }
+        } catch (error) {
+            console.error("Error deleting blood test:", error);
+            toast.error("Failed to delete blood test.");
+        }
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const day = date.getDate();
@@ -208,6 +234,51 @@ const Dashboard = () => {
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     };
+
+    const generateExcelFileBackend = async (patientId, fileURL, excelFileName) => {
+        console.log("Generating Excel file...");
+        console.log("Patient ID:", patientId);
+        console.log("File URL:", fileURL);
+        console.log("Excel File Name:", excelFileName);
+
+        try {
+            const response = await fetch('http://localhost:4000/fertility-care/generate-excel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    patientId,
+                    fileURL,
+                    excelFileName
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error("Failed to initiate Excel file generation.");
+            }
+        } catch (error) {
+            console.error("Backend request error:", error);
+            throw error;
+        }
+    };
+
+    const handleGenerateExcelFile = async () => {
+        if (!selectedPatientTest || !excelFileName) {
+            alert("Please select a blood test and provide a name for the Excel file.");
+            return;
+        }
+
+        try {
+            await generateExcelFileBackend(selectedPatient.id, selectedPatientTest.url, excelFileName);
+            toast.success("Excel file generation started. Check storage once complete.");
+        } catch (error) {
+            console.error("Error generating Excel file:", error);
+            toast.error("Failed to generate Excel file.");
+        }
+    };
+
+    
 
 
     return (
@@ -261,6 +332,11 @@ const Dashboard = () => {
                                     <p className="text-gray-500 text-xs">No test data available.</p>
                                 )}
                             </ul>
+                            <DeleteTestPopup 
+                                show={showDeleteTestModal}
+                                onClose={() => setShowDeleteTestModal(false)}
+                                onConfirm={confirmDeleteTest}
+                            />
                     </div>
     
                     {/* Buttons at the bottom */}
@@ -353,6 +429,44 @@ const Dashboard = () => {
                         )}
                     </div>
 
+                    <div className="bg-white shadow-md rounded-md px-10 py-8 mt-4">
+                        <h2 className="text-lg font-bold text-gray-800 mb-4">Generate Excel File</h2>
+                        
+                        {/* Blood Test Selection Dropdown */}
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Blood Test:</label>
+                        <select 
+                            value={selectedPatientTest ? selectedPatientTest.name : ''} 
+                            onChange={(e) => handleBloodTestSelection(e.target.value)} 
+                            className="border border-gray-300 rounded-md p-2 w-full mb-4"
+                        >
+                            <option value="" disabled>Select a test</option>
+                            {patientTests.map((test) => (
+                                <option key={test.name} value={test.name}>
+                                    {test.name} - {formatDate(test.createdAt)}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Excel File Name Input */}
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Excel File Name:</label>
+                        <input 
+                            type="text" 
+                            value={excelFileName} 
+                            onChange={(e) => setExcelFileName(e.target.value)} 
+                            placeholder="Enter file name..." 
+                            className="border border-gray-300 rounded-md p-2 w-full mb-4"
+                        />
+
+                        {/* Generate Excel Button */}
+                        <div className="flex justify-center">
+                            <button 
+                                onClick={handleGenerateExcelFile} 
+                                className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white mt-1 md:mt-4 bg-[#ff0000]"
+                            >
+                                Generate Excel File
+                            </button>
+                        </div>  
+                    </div>
                 </div>
             </div>
         )
