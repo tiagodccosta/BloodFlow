@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { db, storage } from '../../firebase';
-import { addDoc, collection, getDocs } from 'firebase/firestore';
+import { addDoc, collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import BloodFlowLogo from "../../Assets/BloodflowLogo.png";
-import { ref, uploadBytes } from 'firebase/storage';
+import { ref, uploadBytes, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
 import Spinner from '../Spinner';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -36,9 +36,37 @@ const Dashboard = () => {
         }
     };
 
+    const fetchPatientTests = async (patientId) => {
+        try {
+            const patientTestsRef = ref(storage, `FertilityCare/${patientId}`);
+            const testFiles = await listAll(patientTestsRef);
+    
+            const fetchedTests = await Promise.all(
+                testFiles.items.map(async (itemRef) => {
+                    const fileURL = await getDownloadURL(itemRef);
+                    const metadata = await getMetadata(itemRef);
+                    return {
+                        name: itemRef.name,
+                        url: fileURL,
+                        createdAt: metadata.timeCreated,
+                    };
+                })
+            );
+    
+            setPatientTests(fetchedTests);
+        } catch (error) {
+            console.error("Error fetching patient tests:", error);
+        }
+    };
+
     useEffect(() => {
         fetchPatients();
     }, []);
+
+    useEffect(() => {
+        fetchPatientTests();
+    }, []);
+        
 
 
     const handleAddPatientClick = async () => {
@@ -101,17 +129,9 @@ const Dashboard = () => {
     const handlePatientSelect = async (patient) => {
         setSelectedPatient(patient);
         setPatientTests([]);
-    
+
         try {
-            const testsCollectionRef = collection(db, 'FertilityCare', patient.id, 'tests');
-            const snapshot = await getDocs(testsCollectionRef);
-    
-            const fetchedTests = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-    
-            setPatientTests(fetchedTests);
+            fetchPatientTests(patient.id);
         } catch (error) {
             console.error("Error fetching patient tests:", error);
         }
@@ -152,7 +172,9 @@ const Dashboard = () => {
 
     const confirmDeletePatient = async (patientId) => {
         try {
-            await db.collection('FertilityCare').doc(patientId).delete();
+            const patientDocRef = doc(db, 'FertilityCare', patientId);
+
+            await deleteDoc(patientDocRef);
             toast.success("Patient deleted successfully.");
             fetchPatients();
             setSelectedPatient(null);
@@ -161,6 +183,15 @@ const Dashboard = () => {
             toast.error("Error deleting patient.");
         }
     }
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
 
     return (
         loadingWindow ? (
@@ -171,36 +202,49 @@ const Dashboard = () => {
                 <div id="Sidebar" className="bg-white h-full md:w-1/5 sm:w-0 w-0 relative flex flex-col justify-between">
                     <div className="flex flex-col justify-start items-start w-full">
                         <img className="w-40 mx-auto -mt-2" src={BloodFlowLogo} alt="BloodFlow Logo" />
-    
-                        {/* Clinic-specific options */}
-                        <ul className="w-full sm:text-xs md:text-xs lg:text-sm p-2 font-medium text-gray-600">
-                            {/* Search Input */}
-                            <input 
-                                type="text" 
-                                value={searchTerm} 
-                                onChange={handleSearchChange} 
-                                placeholder="Search for a patient..." 
-                                className="p-2 border rounded mb-4 w-full"
-                            />
-    
-                            {/* Patient List */}
-                            <h3 className="font-bold text-gray-700 py-2">Patients</h3>
-                            <ul className="patient-list overflow-y-auto" style={{ maxHeight: '400px' }}>
-                                {filteredPatients.map((patient, index) => (
-                                    <li 
-                                        key={index} 
-                                        onClick={() => handlePatientSelect(patient)} 
-                                        className={`cursor-pointer p-2 text-xs ${selectedPatient === patient ? 'bg-gray-300' : 'bg-white'}`}
-                                    >
-                                        {patient.name}
-                                    </li>
-                                ))}
-                            </ul>
+                    </div>
+
+                    <div className="flex-grow p-2">
+                        {/* Search Input */}
+                        <input 
+                            type="text" 
+                            value={searchTerm} 
+                            onChange={handleSearchChange} 
+                            placeholder="Search for a patient..." 
+                            className="p-2 border rounded w-full mb-4"
+                        />
+
+                        {/* Patient List */}
+                        <h3 className="font-bold text-gray-700 mb-2">Patients</h3>
+                        <ul className="patient-list overflow-y-auto" style={{ minHeight: '200px', maxHeight: '200px' }}>
+                            {filteredPatients.map((patient, index) => (
+                                <li 
+                                    key={index} 
+                                    onClick={() => handlePatientSelect(patient)} 
+                                    className={`cursor-pointer p-2 text-xs ${selectedPatient === patient ? 'bg-gray-300' : 'bg-white'}`}
+                                >
+                                    {patient.name}
+                                </li>
+                            ))}
                         </ul>
+
+                        {/* Blood Tests List */}
+                            <h3 className="font-bold text-gray-700 mb-2">Blood Tests</h3>
+                            <ul className="blood-test-list overflow-y-auto" style={{ minHeight: '140px', maxHeight: '140px' }}>
+                                {patientTests && patientTests.length > 0 ? (
+                                    patientTests.map((test, index) => (
+                                        <li key={index} className="p-2 text-xs text-gray-600">
+                                            {test.name} - {formatDate(test.createdAt)}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-xs">No test data available.</p>
+                                )}
+                            </ul>
                     </div>
     
                     {/* Buttons at the bottom */}
-                    <div className="flex flex-col items-center mb-6 mx-4">
+                    <div className="absolute bottom-0 left-0 w-full py-4 px-4">
                         <button 
                             onClick={handleAddPatientClick} 
                             className="bg-[#ff0000] text-white font-bold text-sm w-full py-3 rounded-md my-2"
@@ -240,26 +284,16 @@ const Dashboard = () => {
                                             <span className="font-bold mr-2">Age:</span>
                                             <span className="font-medium">{selectedPatient.age}</span>
                                         </p>
-                                        <h1 className="text-xs font-medium md:text-xs md:font-bold text-gray-500 py-1 md:py-2">
-                                            Blood Tests
-                                        </h1>
-                                        <ul className="list-disc ml-5 mt-2">
-                                            {patientTests && patientTests.length > 0 ? (
-                                                patientTests.map((test, index) => (
-                                                    <li key={index} className="text-sm md:text-base text-gray-600">
-                                                        {test.date}
-                                                    </li>
-                                                ))
-                                            ) : (
-                                                <p className="text-gray-500 text-sm">No test data available.</p>
-                                            )}
-                                        </ul>
+                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
+                                            <span className="font-bold mr-2">Excel File:</span>
+                                            <span className="font-medium">excelFile.xslx - last updated at 13/10/24</span>
+                                        </p>
                                     </div>
                                 </div>
 
                                 {/* Right Container: Actions */}
                                 <div className="w-full md:w-1/3 p-2 md:p-6 md:pl-4 flex flex-col items-center justify-center">
-                                    <p className="font-bold text-black text-lg md:text-xl mb-2 md:mb-4 text-center">Upload Patient Blood Test</p>
+                                    <p className="font-bold text-black text-lg md:text-xl mb-2 md:mb-4 text-center -mt-6">Upload Patient Blood Test</p>
                                     <button 
                                         onClick={() => handleUploadNewTest(selectedPatient.id)} 
                                         className="bg-[#ff0000] w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white"
