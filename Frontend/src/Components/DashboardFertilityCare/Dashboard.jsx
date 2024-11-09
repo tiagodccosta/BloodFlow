@@ -7,17 +7,20 @@ import Spinner from '../Spinner';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getAuth } from 'firebase/auth';
-import DeletePopup from '../Dashboard/DeletePopup';
+import DeletePatientPopup from './DeletePatientPopup';
+import NewFilePopup from '../Dashboard/NewFilePopup';
 
 const Dashboard = () => {
     const [loadingWindow, setLoadingWindow] = useState(true);
     const [patients, setPatients] = useState([]);
     const [filteredPatients, setFilteredPatients] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
+    const [selectedPatientTest, setSelectedPatientTest] = useState(null);
     const [patientTests, setPatientTests] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
-    const [showModal, setShowModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showNewFileModal, setShowNewFileModal] = useState(false);
 
     const fetchPatients = async () => {
         try {
@@ -101,26 +104,36 @@ const Dashboard = () => {
         }
       };
 
-    const handleUploadNewTest = async (patientId) => {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.pdf';
-        fileInput.onchange = async () => {
-            const file = fileInput.files[0];
-            if (file) {
-                await uploadBloodTest(patientId, file);
-            }
-        };
-        fileInput.click();
+      const handleNewFileClick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf';
+        input.onchange = handleFileChange;
+        input.click();
     };
 
-    const uploadBloodTest = async (patientId, file) => {
+    const handleFileChange = (event) => {
+        setSelectedPatientTest(event.target.files[0]);
+        setShowNewFileModal(true);
+    };
+
+
+    const uploadBloodTest = async (patientId) => {
+
         try {
-            const fileRef = ref(storage, `FertilityCare/${patientId}/${file.name}`);
-            
-            await uploadBytes(fileRef, file);
-    
+
+            if(!selectedPatientTest) {
+                return;
+            }
+
+            const fileRef = ref(storage, `FertilityCare/${patientId}/${selectedPatientTest.name}`);
+            await uploadBytes(fileRef, selectedPatientTest);
+            setShowNewFileModal(false);
+            toast.success("Blood Test file uploaded successfully.");
             console.log("Blood Test file uploaded successfully.");
+
+            setPatientTests([]);
+            fetchPatientTests(patientId);
         } catch (error) {
             console.error("Error uploading file:", error);
         }
@@ -135,6 +148,10 @@ const Dashboard = () => {
         } catch (error) {
             console.error("Error fetching patient tests:", error);
         }
+    };
+
+    const handleTestSelect = (test) => {
+        setSelectedPatientTest(test);
     };
 
     const handleSearchChange = (event) => {
@@ -167,7 +184,7 @@ const Dashboard = () => {
     };
 
     const handleDeleteClick = () => {
-        setShowModal(true);
+        setShowDeleteModal(true);
     }
 
     const confirmDeletePatient = async (patientId) => {
@@ -211,7 +228,7 @@ const Dashboard = () => {
                             value={searchTerm} 
                             onChange={handleSearchChange} 
                             placeholder="Search for a patient..." 
-                            className="p-2 border rounded w-full mb-4"
+                            className="p-2 border rounded w-full mb-4 text-sm"
                         />
 
                         {/* Patient List */}
@@ -233,7 +250,10 @@ const Dashboard = () => {
                             <ul className="blood-test-list overflow-y-auto" style={{ minHeight: '140px', maxHeight: '140px' }}>
                                 {patientTests && patientTests.length > 0 ? (
                                     patientTests.map((test, index) => (
-                                        <li key={index} className="p-2 text-xs text-gray-600">
+                                        <li 
+                                        key={index}
+                                        onClick={() => handleTestSelect(test)}
+                                        className={`p-2 text-xs cursor-pointer ${selectedPatientTest === test ? 'bg-gray-300' : 'bg-white'}`}>
                                             {test.name} - {formatDate(test.createdAt)}
                                         </li>
                                     ))
@@ -295,21 +315,29 @@ const Dashboard = () => {
                                 <div className="w-full md:w-1/3 p-2 md:p-6 md:pl-4 flex flex-col items-center justify-center">
                                     <p className="font-bold text-black text-lg md:text-xl mb-2 md:mb-4 text-center -mt-6">Upload Patient Blood Test</p>
                                     <button 
-                                        onClick={() => handleUploadNewTest(selectedPatient.id)} 
+                                        onClick={() => handleNewFileClick()} 
                                         className="bg-[#ff0000] w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white"
                                     >
                                         Upload Blood Test
                                     </button>
+                                    {showNewFileModal && (
+                                        <NewFilePopup
+                                            show={showNewFileModal}
+                                            onClose={() => setShowNewFileModal(false)}
+                                            onConfirm={() => uploadBloodTest(selectedPatient.id)}
+                                            fileName={selectedPatientTest.name}
+                                        />
+                                    )}
                                     <button 
                                         onClick={handleDeleteClick} 
                                         className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white mt-1 md:mt-2 md:-mb-8 bg-black"
                                     >
                                         Delete Patient
                                     </button>
-                                    {showModal && (
-                                        <DeletePopup
-                                            show={showModal}
-                                            onClose={() => setShowModal(false)}
+                                    {showDeleteModal && (
+                                        <DeletePatientPopup
+                                            show={showDeleteModal}
+                                            onClose={() => setShowDeleteModal(false)}
                                             onConfirm={() => confirmDeletePatient(selectedPatient.id)}
                                         />
                                     )}
