@@ -612,88 +612,113 @@ app.post('/efp/analyse-blood-test', async (req, res) => {
     }
 });
 
-const parseParametersAndValues = (text) => {
-    const regex = /(\b[A-ZÁ-Úa-zá-ú]+(?:\s[A-ZÁ-Úa-zá-ú]+)*)\s+(\d{1,2},\d)\s+([a-zA-Z%/x¹²³\d.]+)/g;
-    
-    const results = [];
-    let match;
+async function extractParametersAndValuesFromBloodTest(text) {
+    const url = "https://api.openai.com/v1/chat/completions";
 
-    while ((match = regex.exec(text)) !== null) {
-        const parameter = match[1].trim();
-        const value = `${match[2].replace(',', '.')}`;
-        const unit = match[3].trim();
+    const messages = [
+        {
+            role: "system",
+            content: `
+                Extrai os parâmetros e valores dos resultados de análises de sangue fornecidos, apenas o nome do parâmetro e o valor atual com as unidades de medida, por exemplo (hemoglobina 15.4 g/L). O formato é:
+                - Nome do Parâmetro: valor anterior 1 / valor anterior 2 valor atual unidades
 
-        results.push({ parameter, value: `${value} ${unit}` });
-    }
+                Se não houver valores anteriores, use o valor fornecido.
 
-    return results;
-};
+                Coloca um parâmetro e valor por linha.
+            `,
+        },
+        {
+            role: "user",
+            content: text
+        }
+    ];
 
-const createExcelBuffer = (data) => {
-    const workbook = XLSX.utils.book_new();
-    const worksheetData = [["Parameter", "Value"], ...data.map(d => [d.parameter, d.value])];
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Blood Test Results");
-    return XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-};
-
-const checkIfExcelExists = async (patientId, excelFileName) => {
-    const filePath = `FertilityCare/${patientId}/${excelFileName}.xlsx`;
-    const bucket = storage.bucket(bucketName);
-    const file = bucket.file(filePath);
-    const [exists] = await file.exists();
-    return exists;
-};
-
-const uploadExcelFile = async (patientId, excelBuffer, excelFileName) => {
-    const filePath = `FertilityCare/${patientId}/${excelFileName}.xlsx`;
-    const bucket = storage.bucket(bucketName);
-    const file = bucket.file(filePath);
-    
-    await file.save(Buffer.from(excelBuffer), {
-        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    const response = await axios.post(url, {
+        model: "gpt-4o-2024-08-06",
+        messages: messages,
+        max_tokens: 1000,
+        n: 1
+    }, {
+        headers: {
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json"
+        }
     });
 
-    await file.makePublic();
+    const outputText = response.data.choices[0].message.content;
 
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
-    console.log('Excel file uploaded successfully:', publicUrl);
-    return publicUrl;
-};
+    console.log('AI response:', outputText);
+
+    const parsedData = outputText.split('\n').map(line => {
+        const parts = line.split(':');
+        return parts.length === 2 ? { parameter: parts[0].trim(), value: parts[1].trim() } : null;
+    }).filter(Boolean);
+
+    console.log('Parsed data:', parsedData);
+
+    return parsedData;
+}
+
+async function downloadExcelFile(patientId, fileName) {
+    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}`);
+    const exists = (await file.exists())[0];
+    if (!exists) return null;
+    
+    const fileBuffer = await file.download();
+    try {
+        return XLSX.read(fileBuffer[0], { type: "buffer" });
+    } catch (error) {
+        console.error("Error reading Excel file:", error);
+        return null;
+    }
+}
+
+function updateOrCreateExcelFile(existingWorkbook, newTestData) {
+    const workbook = existingWorkbook || XLSX.utils.book_new();
+
+    let worksheet = workbook.Sheets["Blood Test Results"];
+    if (!worksheet) {
+        worksheet = XLSX.utils.aoa_to_sheet([["Parameter", "Value"]]);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Blood Test Results");
+    }
+
+    const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
+    const startingRow = range.e.r + 1; // Next available row for new data
+
+    newTestData.forEach((data, rowIndex) => {
+        worksheet[XLSX.utils.encode_cell({ c: 0, r: rowIndex + startingRow })] = { v: data.parameter };
+        
+        worksheet[XLSX.utils.encode_cell({ c: 1, r: rowIndex + startingRow })] = { v: data.value };
+    });
+
+    worksheet["!ref"] = XLSX.utils.encode_range({
+        s: { c: 0, r: 0 },
+        e: { c: 1, r: startingRow + newTestData.length - 1 }
+    });
+
+    return workbook;
+}
+
 
 app.post('/fertility-care/generate-excel', async (req, res) => {
     const { patientId, fileURL, excelFileName } = req.body;
 
     try {
         const pdfResponse = await axios.get(fileURL, { responseType: 'arraybuffer' });
-        const pdfBuffer = pdfResponse.data;
+        const pdfText = await pdfParser(pdfResponse.data);
+        const parsedData = await extractParametersAndValuesFromBloodTest(pdfText.text);
+        
+        let workbook = await downloadExcelFile(patientId, excelFileName);
+        workbook = updateOrCreateExcelFile(workbook, parsedData);
 
-        const data = await pdfParser(pdfBuffer);
-        const parsedData = parseParametersAndValues(data.text);
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+        const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${excelFileName}`);
+        
+        await file.save(excelBuffer, { contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        const publicUrl = file.publicUrl();
+        res.status(200).send({ message: "Excel file updated successfully.", url: publicUrl });
 
-        const excelBuffer = createExcelBuffer(parsedData);
-
-        const excelExists = await checkIfExcelExists(patientId, excelFileName);
-
-        let publicUrl;
-
-        if (excelExists) {
-            const [existingDataBuffer] = await storage.bucket(bucketName).file(`FertilityCare/${patientId}/${excelFileName}.xlsx`).download();
-            const existingWorkbook = XLSX.read(existingDataBuffer, { type: 'buffer' });
-
-            const existingSheet = existingWorkbook.Sheets['Blood Test Results'];
-            const newRows = parsedData.map(d => [d.parameter, d.value]);
-            const lastRow = XLSX.utils.sheet_to_json(existingSheet, { header: 1 }).length;
-
-            XLSX.utils.sheet_add_aoa(existingSheet, newRows, { origin: -1 });
-
-            const updatedExcelBuffer = XLSX.write(existingWorkbook, { bookType: 'xlsx', type: 'array' });
-            publicUrl = await uploadExcelFile(patientId, updatedExcelBuffer, excelFileName);
-        } else {
-            publicUrl = await uploadExcelFile(patientId, excelBuffer, excelFileName);
-        }
-
-        res.status(200).send({ message: "Excel file generated and saved successfully.", fileUrl: publicUrl });
     } catch (error) {
         console.error("Error generating Excel file:", error);
         res.status(500).send({ error: "Failed to generate Excel file." });
