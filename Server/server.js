@@ -683,7 +683,7 @@ function updateOrCreateExcelFile(existingWorkbook, newTestData) {
     }
 
     const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
-    const startingRow = range.e.r + 1; // Next available row for new data
+    const startingRow = range.e.r + 1;
 
     newTestData.forEach((data, rowIndex) => {
         worksheet[XLSX.utils.encode_cell({ c: 0, r: rowIndex + startingRow })] = { v: data.parameter };
