@@ -642,14 +642,10 @@ async function extractParametersAndValuesFromBloodTest(text) {
 
     const outputText = response.data.choices[0].message.content;
 
-    console.log('AI response:', outputText);
-
     const parsedData = outputText.split('\n').map(line => {
         const parts = line.split(':');
         return parts.length === 2 ? { parameter: parts[0].trim(), value: parts[1].trim() } : null;
     }).filter(Boolean);
-
-    console.log('Parsed data:', parsedData);
 
     return parsedData;
 }
@@ -726,10 +722,7 @@ app.post('/fertility-care/generate-excel', async (req, res) => {
         const signedUrls = await file.getSignedUrl(options);
         const signedUrl = signedUrls[0];
 
-        console.log("signedUrl:", signedUrl);
-
         res.status(200).send({ message: "Excel file updated successfully.", url: signedUrl });
-
     } catch (error) {
         console.error("Error generating Excel file:", error);
         res.status(500).send({ error: "Failed to generate Excel file." });

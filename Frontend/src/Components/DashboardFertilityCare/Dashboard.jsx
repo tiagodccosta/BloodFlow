@@ -278,7 +278,7 @@ const Dashboard = () => {
 
         try {
             await generateExcelFileBackend(selectedPatient.id, selectedPatientTest.url, excelFileName);
-            toast.success("Excel file generation started. Check storage once complete.");
+            toast.success("Excel file generated successfully.");
         } catch (error) {
             console.error("Error generating Excel file:", error);
             toast.error("Failed to generate Excel file.");
