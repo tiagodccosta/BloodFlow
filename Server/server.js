@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const { marked } = require('marked');
-const { Storage } = require('@google-cloud/storage');
 const admin = require('firebase-admin');
 const firebase = require('firebase/app');
 const { getAuth, signInWithEmailAndPassword } = require('firebase/auth');
@@ -51,12 +50,6 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const serviceAccount = JSON.parse(Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8'));
-
-const storage = new Storage({
-    credentials: serviceAccount,
-});
-
 const firebaseAccount = JSON.parse(Buffer.from(process.env.FIREBASE_ACCOUNT_KEY, 'base64').toString('utf-8'));
 
 admin.initializeApp({
@@ -69,6 +62,8 @@ firebase.initializeApp({
   });
 
 const bucketName = process.env.STORAGE_BUCKET;
+
+const storage = admin.storage();
 
 app.get('/', async (req, res) => {
     res.send('Welcome to the BloodFlow application!');
@@ -711,18 +706,29 @@ app.post('/fertility-care/generate-excel', async (req, res) => {
     try {
         const pdfResponse = await axios.get(fileURL, { responseType: 'arraybuffer' });
         const pdfText = await pdfParser(pdfResponse.data);
-        const parsedData = await extractParametersAndValuesFromBloodTest(pdfText.text);
         
+        const parsedData = await extractParametersAndValuesFromBloodTest(pdfText.text);
+
         let workbook = await downloadExcelFile(patientId, excelFileName);
+        
         workbook = updateOrCreateExcelFile(workbook, parsedData);
 
         const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+
         const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${excelFileName}`);
-        
         await file.save(excelBuffer, { contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        
-        const publicUrl = file.publicUrl();
-        res.status(200).send({ message: "Excel file updated successfully.", url: publicUrl });
+
+        const options = {
+            action: 'read',
+            expires: Date.now() + 3600 * 1000
+        };
+
+        const signedUrls = await file.getSignedUrl(options);
+        const signedUrl = signedUrls[0];
+
+        console.log("signedUrl:", signedUrl);
+
+        res.status(200).send({ message: "Excel file updated successfully.", url: signedUrl });
 
     } catch (error) {
         console.error("Error generating Excel file:", error);

@@ -253,9 +253,16 @@ const Dashboard = () => {
                     excelFileName
                 })
             });
+
+            const result = await response.json();
     
             if (!response.ok) {
                 throw new Error("Failed to initiate Excel file generation.");
+            } else if(response.ok) {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = result.url;
+                downloadLink.download = excelFileName;
+                downloadLink.click();
             }
         } catch (error) {
             console.error("Backend request error:", error);

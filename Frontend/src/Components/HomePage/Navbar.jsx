@@ -56,7 +56,7 @@ const Navbar = () => {
                 <button className='bg-black w-[150px] ml-4 rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-1 py-3 text-white'>
                 <RouterLink to="/login">{t('login')}</RouterLink></button>
             </ul>
-            <div on onClick={handleNav} className='block lg:hidden'>
+            <div onClick={handleNav} className='block lg:hidden'>
                 {nav ? <AiOutlineClose size = {20} /> : <AiOutlineMenu size={20} />}
             </div>
             <div className={nav ? 'fixed left-0 top-0 w-[60%] h-full border-r border-r-gray-700 bg-white ease-in-out duration-500 z-50' : 'fixed left-[-100%]'}>
