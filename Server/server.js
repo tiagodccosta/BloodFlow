@@ -682,23 +682,28 @@ function updateOrCreateExcelFile(existingWorkbook, newTestData) {
         XLSX.utils.book_append_sheet(workbook, worksheet, "Blood Test Results");
     }
 
-    const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
-    const startingRow = range.e.r + 1;
+    let newColumnIndex = 0;
+    if (worksheet["!ref"] && worksheet["!ref"] !== "A1:B1") {
+        while (worksheet[XLSX.utils.encode_cell({ c: newColumnIndex, r: 0 })]) {
+            newColumnIndex += 3;
+        }
+    }
+    worksheet[XLSX.utils.encode_cell({ c: newColumnIndex, r: 0 })] = { v: "Parameter" };
+    worksheet[XLSX.utils.encode_cell({ c: newColumnIndex + 1, r: 0 })] = { v: "Value" };
 
     newTestData.forEach((data, rowIndex) => {
-        worksheet[XLSX.utils.encode_cell({ c: 0, r: rowIndex + startingRow })] = { v: data.parameter };
-        
-        worksheet[XLSX.utils.encode_cell({ c: 1, r: rowIndex + startingRow })] = { v: data.value };
+        worksheet[XLSX.utils.encode_cell({ c: newColumnIndex, r: rowIndex + 1 })] = { v: data.parameter };
+        worksheet[XLSX.utils.encode_cell({ c: newColumnIndex + 1, r: rowIndex + 1 })] = { v: data.value };
     });
 
+    const maxRow = Math.max(newTestData.length + 1, worksheet["!ref"] ? XLSX.utils.decode_range(worksheet["!ref"]).e.r + 1 : 0);
     worksheet["!ref"] = XLSX.utils.encode_range({
         s: { c: 0, r: 0 },
-        e: { c: 1, r: startingRow + newTestData.length - 1 }
+        e: { c: newColumnIndex + 1, r: maxRow - 1 }
     });
 
     return workbook;
 }
-
 
 app.post('/fertility-care/generate-excel', async (req, res) => {
     const { patientId, fileURL, excelFileName } = req.body;
