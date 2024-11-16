@@ -18,8 +18,7 @@ const jobQueue = new Map();
 const { Readable } = require('stream');
 const pdfParser = require('pdf-parse');
 const { exec } = require('child_process');
-const XLSX = require('xlsx');
-
+const ExcelJS = require('exceljs');
 require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -614,12 +613,14 @@ async function extractParametersAndValuesFromBloodTest(text) {
         {
             role: "system",
             content: `
+                Extrai a data da análise. O formato deve ser: "DD/MM/AAAA". Esta estará mais ao inicio do texto e perto de algo como "Data da análise: 01/01/2024", por exemplo, ou "Colheita: 01/01/2024".
+
                 Extrai os parâmetros e valores dos resultados de análises de sangue fornecidos, apenas o nome do parâmetro e o valor atual com as unidades de medida, por exemplo (hemoglobina 15.4 g/L). O formato é:
-                - Nome do Parâmetro: valor anterior 1 / valor anterior 2 valor atual unidades
+                Nome do Parâmetro: valor anterior 1 / valor anterior 2 valor atual unidades
 
                 Se não houver valores anteriores, use o valor fornecido.
 
-                Coloca um parâmetro e valor por linha.
+                Coloca um parâmetro e valor por linha, seguido pela data da análise na última linha.
             `,
         },
         {
@@ -631,7 +632,7 @@ async function extractParametersAndValuesFromBloodTest(text) {
     const response = await axios.post(url, {
         model: "gpt-4o-2024-08-06",
         messages: messages,
-        max_tokens: 1000,
+        max_tokens: 2500,
         n: 1
     }, {
         headers: {
@@ -647,53 +648,83 @@ async function extractParametersAndValuesFromBloodTest(text) {
         return parts.length === 2 ? { parameter: parts[0].trim(), value: parts[1].trim() } : null;
     }).filter(Boolean);
 
-    return parsedData;
+    const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b|\b(\d{4}-\d{2}-\d{2})\b/;
+    const dateMatch = outputText.match(dateRegex);
+    const testDate = dateMatch ? dateMatch[0] : null;
+
+    return { parameters: parsedData, testDate };
 }
 
 async function downloadExcelFile(patientId, fileName) {
     const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}`);
     const exists = (await file.exists())[0];
     if (!exists) return null;
-    
+
     const fileBuffer = await file.download();
+    const workbook = new ExcelJS.Workbook();
     try {
-        return XLSX.read(fileBuffer[0], { type: "buffer" });
+        await workbook.xlsx.load(fileBuffer[0]);
+        return workbook;
     } catch (error) {
         console.error("Error reading Excel file:", error);
         return null;
     }
 }
 
-function updateOrCreateExcelFile(existingWorkbook, newTestData) {
-    const workbook = existingWorkbook || XLSX.utils.book_new();
+async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) {
+    const workbook = existingWorkbook || new ExcelJS.Workbook();
+    let worksheet = workbook.getWorksheet('Blood Test Results');
 
-    let worksheet = workbook.Sheets["Blood Test Results"];
     if (!worksheet) {
-        worksheet = XLSX.utils.aoa_to_sheet([["Parameter", "Value"]]);
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Blood Test Results");
+        worksheet = workbook.addWorksheet('Blood Test Results');
+        worksheet.addRow(['Parameters', testDate]);
+
+        newTestData.forEach((data) => {
+            if(data.parameter === 'Data da análise') return;
+            worksheet.addRow([data.parameter, data.value]);
+        });
+    } else {
+        const headerRow = worksheet.getRow(1);
+        const newColumnIndex = headerRow.actualCellCount + 1;
+        headerRow.getCell(newColumnIndex).value = testDate;
+
+        const parameterRowMap = {};
+        worksheet.eachRow((row, rowIndex) => {
+            if (rowIndex > 1) {
+                parameterRowMap[row.getCell(1).value] = row;
+            }
+        });
+
+        newTestData.forEach((data) => {
+
+            if(data.parameter === 'Data da análise') return;
+
+            let row = parameterRowMap[data.parameter];
+            if (!row) {
+                row = worksheet.addRow([data.parameter]);
+            }
+            row.getCell(newColumnIndex).value = data.value;
+        });
     }
-
-    let newColumnIndex = 0;
-    if (worksheet["!ref"] && worksheet["!ref"] !== "A1:B1") {
-        while (worksheet[XLSX.utils.encode_cell({ c: newColumnIndex, r: 0 })]) {
-            newColumnIndex += 3;
-        }
-    }
-    worksheet[XLSX.utils.encode_cell({ c: newColumnIndex, r: 0 })] = { v: "Parameter" };
-    worksheet[XLSX.utils.encode_cell({ c: newColumnIndex + 1, r: 0 })] = { v: "Value" };
-
-    newTestData.forEach((data, rowIndex) => {
-        worksheet[XLSX.utils.encode_cell({ c: newColumnIndex, r: rowIndex + 1 })] = { v: data.parameter };
-        worksheet[XLSX.utils.encode_cell({ c: newColumnIndex + 1, r: rowIndex + 1 })] = { v: data.value };
-    });
-
-    const maxRow = Math.max(newTestData.length + 1, worksheet["!ref"] ? XLSX.utils.decode_range(worksheet["!ref"]).e.r + 1 : 0);
-    worksheet["!ref"] = XLSX.utils.encode_range({
-        s: { c: 0, r: 0 },
-        e: { c: newColumnIndex + 1, r: maxRow - 1 }
-    });
 
     return workbook;
+}
+
+async function saveWorkbookToStorage(workbook, patientId, fileName) {
+    const fileBuffer = await workbook.xlsx.writeBuffer();
+
+    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}`);
+    await file.save(fileBuffer, {
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    const options = {
+        action: 'read',
+        expires: Date.now() + 3600 * 1000,
+    };
+
+    const signedUrls = await file.getSignedUrl(options);
+    return signedUrls[0];
 }
 
 app.post('/fertility-care/generate-excel', async (req, res) => {
@@ -702,25 +733,18 @@ app.post('/fertility-care/generate-excel', async (req, res) => {
     try {
         const pdfResponse = await axios.get(fileURL, { responseType: 'arraybuffer' });
         const pdfText = await pdfParser(pdfResponse.data);
-        
-        const parsedData = await extractParametersAndValuesFromBloodTest(pdfText.text);
+
+        const { parameters, testDate } = await extractParametersAndValuesFromBloodTest(pdfText.text);
+
+        if (!testDate) {
+            throw new Error("Test date could not be extracted from the blood test.");
+        }
 
         let workbook = await downloadExcelFile(patientId, excelFileName);
-        
-        workbook = updateOrCreateExcelFile(workbook, parsedData);
 
-        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+        workbook = await updateOrCreateExcelFile(workbook, parameters, testDate);
 
-        const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${excelFileName}`);
-        await file.save(excelBuffer, { contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-        const options = {
-            action: 'read',
-            expires: Date.now() + 3600 * 1000
-        };
-
-        const signedUrls = await file.getSignedUrl(options);
-        const signedUrl = signedUrls[0];
+        const signedUrl = await saveWorkbookToStorage(workbook, patientId, excelFileName);
 
         res.status(200).send({ message: "Excel file updated successfully.", url: signedUrl });
     } catch (error) {
