@@ -613,14 +613,14 @@ async function extractParametersAndValuesFromBloodTest(text) {
         {
             role: "system",
             content: `
-                Extrai a data da análise. O formato deve ser: "DD/MM/AAAA". Esta estará mais ao inicio do texto e perto de algo como "Data da análise: 01/01/2024", por exemplo, ou "Colheita: 01/01/2024".
+                Extrai a data da análise. O formato deve ser: "DD/MM/AAAA". Esta estará mais ao início do texto e perto de algo como "Data da análise: 01/01/2024", por exemplo, ou "Colheita: 01/01/2024".
 
-                Extrai os parâmetros e valores dos resultados de análises de sangue fornecidos, apenas o nome do parâmetro e o valor atual com as unidades de medida, por exemplo (hemoglobina 15.4 g/L). O formato é:
-                Nome do Parâmetro: valor anterior 1 / valor anterior 2 valor atual unidades
+                Extrai os parâmetros, valores e intervalos normais (se disponíveis) dos resultados de análises de sangue fornecidos. Retorne os resultados no seguinte formato:
+                
+                Nome do Parâmetro: valor atual unidades (intervalo mínimo - intervalo máximo)
 
-                Se não houver valores anteriores, use o valor fornecido.
-
-                Coloca um parâmetro e valor por linha, seguido pela data da análise na última linha.
+                Se o intervalo não estiver disponível, retorne apenas o valor e as unidades.
+                Coloque um parâmetro e valor por linha, seguido pela data da análise na última linha.
             `,
         },
         {
@@ -645,7 +645,16 @@ async function extractParametersAndValuesFromBloodTest(text) {
 
     const parsedData = outputText.split('\n').map(line => {
         const parts = line.split(':');
-        return parts.length === 2 ? { parameter: parts[0].trim(), value: parts[1].trim() } : null;
+        if (parts.length !== 2) return null;
+
+        const parameter = parts[0].trim();
+
+        const valueRangeMatch = parts[1].trim().match(/([\d.]+(?: [a-zA-Z/]+)?)\s*\(([\d.-]+)\s*-\s*([\d.-]+)\)/);
+        const value = valueRangeMatch ? valueRangeMatch[1].trim() : parts[1].trim();
+        const minRange = valueRangeMatch ? parseFloat(valueRangeMatch[2]) : null;
+        const maxRange = valueRangeMatch ? parseFloat(valueRangeMatch[3]) : null;
+
+        return { parameter, value, minRange, maxRange };
     }).filter(Boolean);
 
     const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b|\b(\d{4}-\d{2}-\d{2})\b/;
@@ -680,8 +689,18 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
         worksheet.addRow(['Parameters', testDate]);
 
         newTestData.forEach((data) => {
-            if(data.parameter === 'Data da análise') return;
-            worksheet.addRow([data.parameter, data.value]);
+            if (data.parameter === 'Data da análise') return;
+
+            const row = worksheet.addRow([data.parameter, data.value]);
+
+            if (data.minRange !== null && data.maxRange !== null) {
+                const numericValue = parseFloat(data.value.replace(/[^\d.-]/g, ""));
+                row.getCell(2).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: numericValue >= data.minRange && numericValue <= data.maxRange ? 'FF00FF00' : 'FFFF0000' }
+                };
+            }
         });
     } else {
         const headerRow = worksheet.getRow(1);
@@ -696,14 +715,23 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
         });
 
         newTestData.forEach((data) => {
-
-            if(data.parameter === 'Data da análise') return;
+            if (data.parameter === 'Data da análise') return;
 
             let row = parameterRowMap[data.parameter];
             if (!row) {
                 row = worksheet.addRow([data.parameter]);
             }
-            row.getCell(newColumnIndex).value = data.value;
+            const valueCell = row.getCell(newColumnIndex);
+            valueCell.value = data.value;
+
+            if (data.minRange !== null && data.maxRange !== null) {
+                const numericValue = parseFloat(data.value.replace(/[^\d.-]/g, ""));
+                valueCell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: numericValue >= data.minRange && numericValue <= data.maxRange ? 'FF00FF00' : 'FFFF0000' }
+                };
+            }
         });
     }
 
