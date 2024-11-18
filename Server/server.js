@@ -617,7 +617,7 @@ async function extractParametersAndValuesFromBloodTest(text) {
 
                 Extrai os parâmetros, valores e intervalos normais (se disponíveis) dos resultados de análises de sangue fornecidos. Retorne os resultados no seguinte formato:
                 
-                Nome do Parâmetro: valor atual unidades (intervalo mínimo - intervalo máximo)
+                Nome do Parâmetro: valor atual unidades : (intervalo mínimo - intervalo máximo)
 
                 Se o intervalo não estiver disponível, retorne apenas o valor e as unidades.
                 Coloque um parâmetro e valor por linha, seguido pela data da análise na última linha.
@@ -642,25 +642,25 @@ async function extractParametersAndValuesFromBloodTest(text) {
     });
 
     const outputText = response.data.choices[0].message.content;
+    console.log('Output text:', outputText);
 
     const parsedData = outputText.split('\n').map(line => {
-        const parts = line.split(':');
-        if (parts.length !== 2) return null;
-
-        const parameter = parts[0].trim();
-
-        const valueRangeMatch = parts[1].trim().match(/([\d.]+(?: [a-zA-Z/]+)?)\s*\(([\d.-]+)\s*-\s*([\d.-]+)\)/);
-        const value = valueRangeMatch ? valueRangeMatch[1].trim() : parts[1].trim();
-        const minRange = valueRangeMatch ? parseFloat(valueRangeMatch[2]) : null;
-        const maxRange = valueRangeMatch ? parseFloat(valueRangeMatch[3]) : null;
-
-        return { parameter, value, minRange, maxRange };
+        const match = line.match(/^(.*?):\s*([\d.,]+(?: x10¹²\/L| x10⁹\/L| [%]| mg\/dL| g\/dL| pg| fL| U\/L| %| x)?(?: \[.*?\])?)\s*(?:\:\s*\((<|>)?\s*([\d.,-]+)\s*-\s*([\d.,-]+|Até \d+)?\))?/);
+        if (!match) return null;
+    
+        const parameter = match[1].trim();
+        const value = match[2].trim();
+        const rangeType = match[4] || null;
+        const minRange = match[5] ? parseFloat(match[5].replace(',', '.')) : null;
+        const maxRange = match[6] ? parseFloat(match[6].replace(',', '.')) : null;
+    
+        return { parameter, value, rangeType, minRange, maxRange };
     }).filter(Boolean);
-
-    const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b|\b(\d{4}-\d{2}-\d{2})\b/;
+    
+    const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b/;
     const dateMatch = outputText.match(dateRegex);
     const testDate = dateMatch ? dateMatch[0] : null;
-
+    
     return { parameters: parsedData, testDate };
 }
 
@@ -689,6 +689,7 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
         worksheet.addRow(['Parameters', testDate]);
 
         newTestData.forEach((data) => {
+            console.log(data.minRange, data.maxRange);
             if (data.parameter === 'Data da análise') return;
 
             const row = worksheet.addRow([data.parameter, data.value]);
@@ -715,6 +716,7 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
         });
 
         newTestData.forEach((data) => {
+            console.log(data.minRange, data.maxRange);
             if (data.parameter === 'Data da análise') return;
 
             let row = parameterRowMap[data.parameter];
