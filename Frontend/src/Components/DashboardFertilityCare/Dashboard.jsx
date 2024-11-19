@@ -465,7 +465,7 @@ const Dashboard = () => {
                         )}
                     </div>
 
-                    <div className="bg-white shadow-md rounded-md px-10 py-8 mt-4">
+                    <div className="bg-white shadow-md rounded-md px-10 py-8 mt-4 mb-8">
                         <h2 className="text-lg font-bold text-gray-800 mb-4">Generate Excel File</h2>
                         
                         {/* Blood Test Selection Dropdown */}
