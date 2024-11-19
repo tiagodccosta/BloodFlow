@@ -24,6 +24,8 @@ const Dashboard = () => {
     const [showNewFileModal, setShowNewFileModal] = useState(false);
     const [showDeleteTestModal, setShowDeleteTestModal] = useState(false);
     const [excelFileName, setExcelFileName] = useState("");
+    const [excelFile, setExcelFile] = useState(null);
+    const [generatingExcelFile, setGeneratingExcelFile] = useState(false);
 
     const fetchPatients = async () => {
         try {
@@ -50,16 +52,24 @@ const Dashboard = () => {
             const fetchedTests = await Promise.all(
                 testFiles.items.map(async (itemRef) => {
                     const fileURL = await getDownloadURL(itemRef);
-                    const metadata = await getMetadata(itemRef);
+                    const metadata = await getMetadata(itemRef);    
+                    const createdAtDate = new Date(metadata.timeCreated);
+    
                     return {
                         name: itemRef.name,
                         url: fileURL,
-                        createdAt: metadata.timeCreated,
+                        createdAt: createdAtDate,
                     };
                 })
             );
     
-            setPatientTests(fetchedTests);
+            const sortedFiles = fetchedTests.sort((a, b) => a.createdAt - b.createdAt);
+    
+            setPatientTests(sortedFiles.map(file => ({
+                name: file.name,
+                date: file.createdAt.toLocaleDateString(),
+                url: file.url,
+            })));
         } catch (error) {
             console.error("Error fetching patient tests:", error);
         }
@@ -73,15 +83,39 @@ const Dashboard = () => {
         fetchPatientTests();
     }, []);
         
-
-
-    const handleAddPatientClick = async () => {
-        const name = prompt("Enter patient's name:");
-        const age = prompt("Enter patient's age:");
-        await addPatient(name, age);
+    const fetchPatientExcelFile = async (patientId) => {
+        try {
+            const patientExcelFileRef = ref(storage, `FertilityCare/${patientId}`);
+            const fileList = await listAll(patientExcelFileRef);
+    
+            const excelFile = fileList.items.find((item) =>
+                item.name.toLowerCase().endsWith(".xlsx")
+            );
+    
+            if (excelFile) {
+                const fileURL = await getDownloadURL(excelFile);
+                const metadata = await getMetadata(excelFile);
+    
+                const formattedUpdatedAt = new Date(metadata.updated).toLocaleDateString();
+                setExcelFile({
+                    name: excelFile.name,
+                    url: fileURL,
+                    updatedAt: formattedUpdatedAt,
+                });
+            } else {
+                setExcelFile(null);
+            }
+        } catch (error) {
+            console.error("Error fetching patient Excel file:", error);
+        }
     };
 
-    const addPatient = async (name, age) => {
+    const handleAddPatientClick = async () => {
+        const name = prompt("Enter patient's iMed Number:");
+        await addPatient(name);
+    };
+
+    const addPatient = async (name) => {
         const auth = getAuth();
         const user = auth.currentUser;
       
@@ -93,7 +127,6 @@ const Dashboard = () => {
         try {
             const newPatient = {
                 name,
-                age,
                 createdAt: new Date(),
                 createdBy: user.uid,
             };
@@ -144,6 +177,7 @@ const Dashboard = () => {
 
     const handlePatientSelect = async (patient) => {
         setSelectedPatient(patient);
+        fetchPatientExcelFile(patient.id);
         setPatientTests([]);
 
         try {
@@ -227,19 +261,7 @@ const Dashboard = () => {
         }
     };
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const day = date.getDate();
-        const month = date.getMonth() + 1;
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-    };
-
     const generateExcelFileBackend = async (patientId, fileURL, excelFileName) => {
-        console.log("Generating Excel file...");
-        console.log("Patient ID:", patientId);
-        console.log("File URL:", fileURL);
-        console.log("Excel File Name:", excelFileName);
 
         try {
             const response = await fetch('http://localhost:4000/fertility-care/generate-excel', {
@@ -276,10 +298,14 @@ const Dashboard = () => {
             return;
         }
 
+        setGeneratingExcelFile(true);
+
         try {
             await generateExcelFileBackend(selectedPatient.id, selectedPatientTest.url, excelFileName);
             toast.success("Excel file generated successfully.");
+            setGeneratingExcelFile(false);
         } catch (error) {
+            setGeneratingExcelFile(false);
             console.error("Error generating Excel file:", error);
             toast.error("Failed to generate Excel file.");
         }
@@ -327,12 +353,12 @@ const Dashboard = () => {
                             <h3 className="font-bold text-gray-700 mb-2">Blood Tests</h3>
                             <ul className="blood-test-list overflow-y-auto" style={{ minHeight: '140px', maxHeight: '140px' }}>
                                 {patientTests && patientTests.length > 0 ? (
-                                    patientTests.map((test, index) => (
+                                    patientTests.slice().reverse().map((test, index) => (
                                         <li 
                                         key={index}
                                         onClick={() => handleTestSelect(test)}
                                         className={`p-2 text-xs cursor-pointer ${selectedPatientTest === test ? 'bg-gray-300' : 'bg-white'}`}>
-                                            {test.name} - {formatDate(test.createdAt)}
+                                            {test.name} - {test.date}
                                         </li>
                                     ))
                                 ) : (
@@ -380,16 +406,18 @@ const Dashboard = () => {
                                     <div className="border-2 border-[#ff0000] rounded-lg p-2 md:p-4 md:border-4 flex-grow">
                                         <h1 className="text-md md:text-xl font-bold text-black py-1 md:py-2">Patient Information</h1>
                                         <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
-                                            <span className="font-bold mr-2">Name:</span>
+                                            <span className="font-bold mr-2">iMed Number:</span>
                                             <span className="font-medium">{selectedPatient.name}</span>
                                         </p>
                                         <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
-                                            <span className="font-bold mr-2">Age:</span>
-                                            <span className="font-medium">{selectedPatient.age}</span>
-                                        </p>
-                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
                                             <span className="font-bold mr-2">Excel File:</span>
-                                            <span className="font-medium">excelFile.xslx - last updated at 13/10/24</span>
+                                            {excelFile ? (
+                                                <span className="font-medium">
+                                                    {excelFile.name} - last updated at {excelFile.updatedAt}
+                                                </span>
+                                            ) : (
+                                                <span className="font-medium">No Excel file available</span>
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -447,9 +475,9 @@ const Dashboard = () => {
                             className="border border-gray-300 rounded-md p-2 w-full mb-4"
                         >
                             <option value="" disabled>Select a test</option>
-                            {patientTests.map((test) => (
+                            {patientTests.slice().reverse().map((test) => (
                                 <option key={test.name} value={test.name}>
-                                    {test.name} - {formatDate(test.createdAt)}
+                                    {test.name} - {test.date}
                                 </option>
                             ))}
                         </select>
@@ -465,12 +493,12 @@ const Dashboard = () => {
                         />
 
                         {/* Generate Excel Button */}
-                        <div className="flex justify-center">
+                        <div className="flex items-center justify-center space-x-2">
                             <button 
                                 onClick={handleGenerateExcelFile} 
-                                className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white mt-1 md:mt-4 bg-[#ff0000]"
+                                className="w-40 text-sm md:w-52 rounded-md font-semibold py-2 md:py-4 text-white mt-1 md:mt-4 bg-[#ff0000]"
                             >
-                                Generate Excel File
+                                <span className="text-white">{generatingExcelFile ? 'Generating...' : 'Generate Excel File'}</span>
                             </button>
                         </div>  
                     </div>

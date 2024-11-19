@@ -633,6 +633,9 @@ async function extractParametersAndValuesFromBloodTest(text) {
                     ]
                 }
                 
+                Always extract the full name of the parameter, not just an abbreviation. Like "eGFR-CKD-EPI 2009 (18-70 anos)" instead of just "eGFR-CKD-EPI 2009".
+                If a parameter appears multiple times specify the parameter that appears again type like "Hemoglobina (Urina)".
+                Always extract the full unit of measurement, like "x10¹²/L" instead of just "x10¹²".
                 If a parameter lacks a reference range, use "ND" for the status.
             `,
         },
@@ -680,7 +683,7 @@ async function extractParametersAndValuesFromBloodTest(text) {
 }
 
 async function downloadExcelFile(patientId, fileName) {
-    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}`);
+    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}.xlsx`);
     const exists = (await file.exists())[0];
     if (!exists) return null;
 
@@ -768,7 +771,7 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
 async function saveWorkbookToStorage(workbook, patientId, fileName) {
     const fileBuffer = await workbook.xlsx.writeBuffer();
 
-    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}`);
+    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}.xlsx`);
     await file.save(fileBuffer, {
         contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
