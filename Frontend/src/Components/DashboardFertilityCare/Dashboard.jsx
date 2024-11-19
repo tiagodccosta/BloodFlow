@@ -10,6 +10,7 @@ import { getAuth } from 'firebase/auth';
 import DeletePatientPopup from './DeletePatientPopup';
 import NewFilePopup from '../Dashboard/NewFilePopup';
 import DeleteTestPopup from '../Dashboard/DeletePopup';
+import SpinnerButton from './SpinnerButton';
 
 const Dashboard = () => {
     const [loadingWindow, setLoadingWindow] = useState(true);
@@ -403,13 +404,13 @@ const Dashboard = () => {
                             <>
                                 {/* Left Container: Patient Details */}
                                 <div className="w-full md:w-2/3 p-2 md:p-6 flex flex-col">
-                                    <div className="border-2 border-[#ff0000] rounded-lg p-2 md:p-4 md:border-4 flex-grow">
-                                        <h1 className="text-md md:text-xl font-bold text-black py-1 md:py-2">Patient Information</h1>
-                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
+                                    <div className="border-2 border-[#ff0000] rounded-lg p-2 md:px-4 py-6 md:border-4 flex-grow">
+                                        <h1 className="text-md md:text-xl font-bold text-black py-1 md:py-4">Patient Information</h1>
+                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-4">
                                             <span className="font-bold mr-2">iMed Number:</span>
                                             <span className="font-medium">{selectedPatient.name}</span>
                                         </p>
-                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-2">
+                                        <p className="text-xs md:text-sm text-gray-600 py-1 md:py-4">
                                             <span className="font-bold mr-2">Excel File:</span>
                                             {excelFile ? (
                                                 <span className="font-medium">
@@ -494,12 +495,12 @@ const Dashboard = () => {
 
                         {/* Generate Excel Button */}
                         <div className="flex items-center justify-center space-x-2">
-                            <button 
+                            <SpinnerButton 
                                 onClick={handleGenerateExcelFile} 
-                                className="w-40 text-sm md:w-52 rounded-md font-semibold py-2 md:py-4 text-white mt-1 md:mt-4 bg-[#ff0000]"
-                            >
-                                <span className="text-white">{generatingExcelFile ? 'Generating...' : 'Generate Excel File'}</span>
-                            </button>
+                                isLoading={generatingExcelFile}
+                                >
+                                {generatingExcelFile ? 'Generating...' : 'Generate Excel File'}
+                            </SpinnerButton>
                         </div>  
                     </div>
                 </div>
