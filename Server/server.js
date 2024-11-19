@@ -719,12 +719,6 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
                     pattern: 'solid',
                     fgColor: { argb: 'FFFF0000' }
                 };
-            } else if (data.status === "dentro do intervalo") {
-                row.getCell(2).fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'FF0ca500' }
-                };
             }
         });
     } else {
@@ -754,12 +748,6 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
                     type: 'pattern',
                     pattern: 'solid',
                     fgColor: { argb: 'FFFF0000' }
-                };
-            } else if (data.status === "dentro do intervalo") {
-                valueCell.fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'FF0ca500' }
                 };
             }
         });
