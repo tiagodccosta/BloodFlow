@@ -613,21 +613,27 @@ async function extractParametersAndValuesFromBloodTest(text) {
         {
             role: "system",
             content: `
-                Extrai a data da análise. O formato deve ser: "DD/MM/AAAA". Esta estará mais ao início do texto e perto de algo como "Data da análise: 01/01/2024", por exemplo.
+                Extract the analysis date in the format: "DD/MM/YYYY". This will usually appear near the beginning of the text and close to phrases like "Data da análise: 01/01/2024".
 
-                Extrai os parâmetros, valores e indique se o valor está fora do intervalo normal ou não (se o intervalo estiver disponível). Retorne os resultados no seguinte formato:
+                Extract all parameters, values, units, and whether the value is within the normal range. Return the results in the following JSON structure:
 
-                Nome do Parâmetro: valor atual unidades : (dentro ou fora do intervalo)
-
-                Segue este exemplo de formato para a resposta:
-                Eritrócitos: 4,75 x10¹²/L : dentro do intervalo  
-                Hemoglobina: 13,5 g/dL : dentro do intervalo  
-                Hematócrito: 41,5 % : dentro do intervalo  
-                Volume Globular Médio: 87,4 fL : dentro do intervalo  
-                Hemoglobina Globular Média: 28,4 pg : dentro do intervalo
-
-                Se o intervalo não estiver disponível, retorne apenas o valor e as unidades com a indicação "ND".  
-                Coloque um parâmetro e valor por linha, seguido pela data da análise na última linha.
+                {
+                    "analysisDate": "DD/MM/YYYY",
+                    "parameters": [
+                        {
+                            "parameter": "Eritrócitos",
+                            "value": "5.19 x10¹²/L",
+                            "status": "dentro do intervalo"
+                        },
+                        {
+                            "parameter": "Hemoglobina",
+                            "value": "15.4 g/dL",
+                            "status": "fora do intervalo"
+                        }
+                    ]
+                }
+                
+                If a parameter lacks a reference range, use "ND" for the status.
             `,
         },
         {
@@ -639,7 +645,7 @@ async function extractParametersAndValuesFromBloodTest(text) {
     const response = await axios.post(url, {
         model: "gpt-4o-2024-08-06",
         messages: messages,
-        max_tokens: 2500,
+        max_tokens: 5000,
         n: 1
     }, {
         headers: {
@@ -648,41 +654,29 @@ async function extractParametersAndValuesFromBloodTest(text) {
         }
     });
 
-    const outputText = response.data.choices[0].message.content;
-    console.log('Output text:', outputText);
+    let outputText = response.data.choices[0].message.content;
 
-    const parsedData = outputText.split('\n').map(line => {
-        console.log('Parsing line:', line);
-    
-        // Using exec with a global regex to handle multiple matches in a line
-        const regex = /([a-zA-Z0-9\sáéíóúãõçÁÉÍÓÚÀàãõ,\(\)\/\-]+(?:\s?\(.*?\))?):\s*([\d.,><]+(?:\s?(?:x10¹²\/L|x10⁹\/L|[%]|mg\/dL|g\/dL|pg|fL|U\/L|mUI\/L|mmol\/L|μg\/L|ng\/mL|mL\/min\/1,73\s?m2|mm\/h|Spec\ grav|pH|mL|L|ng\/L|g\/dL|mL|mg\/g|mL\/kg|%)?)\s*|\s?ND)\s*:\s*(dentro|fora)\sdo\sintervalo/g;
-        let match;
-        const result = [];
-    
-        // Loop through all matches in the line using exec()
-        while ((match = regex.exec(line)) !== null) {
-    
-            const parameter = match[1].trim(); 
-            const value = match[2].trim();
-            const status = match[3].trim();
-    
-            result.push({ parameter, value, status });
-        }
+    if (outputText.startsWith("```json")) {
+        outputText = outputText.slice(7, -3).trim();
+    } else if (outputText.startsWith("```")) {
+        outputText = outputText.slice(3, -3).trim();
+    }
 
-        if (result.length === 0) {
-            console.log('Unparsed line:', line);
-        }
+    let parsedResponse;
+    try {
+        parsedResponse = JSON.parse(outputText);
+    } catch (error) {
+        console.error('Failed to parse JSON from the model:', error);
+        console.log('Output text:', outputText);
+        return { parameters: null, testDate: null };
+    }
 
-        return result.length > 0 ? result : null;
-    }).filter(Boolean);
+    const testDate = parsedResponse.analysisDate || null;
+    const parameters = parsedResponse.parameters || [];
 
-    const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b/;
-    const dateMatch = outputText.match(dateRegex);
-    const testDate = dateMatch ? dateMatch[0] : null;
+    console.log('Parsed data:', { parameters, testDate });
 
-    console.log('Parsed data:', parsedData);
-
-    return { parameters: parsedData, testDate };
+    return { parameters, testDate };
 }
 
 async function downloadExcelFile(patientId, fileName) {
@@ -716,13 +710,13 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
 
             const row = worksheet.addRow([data.parameter, data.value]);
 
-            if (data.status === "fora") {
+            if (data.status === "fora do intervalo") {
                 row.getCell(2).fill = {
                     type: 'pattern',
                     pattern: 'solid',
                     fgColor: { argb: 'FFFF0000' }
                 };
-            } else if (data.status === "dentro") {
+            } else if (data.status === "dentro do intervalo") {
                 row.getCell(2).fill = {
                     type: 'pattern',
                     pattern: 'solid',
@@ -752,13 +746,13 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
             const valueCell = row.getCell(newColumnIndex);
             valueCell.value = data.value;
 
-            if (data.status === "fora") {
+            if (data.status === "fora do intervalo") {
                 valueCell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
                     fgColor: { argb: 'FFFF0000' }
                 };
-            } else if (data.status === "dentro") {
+            } else if (data.status === "dentro do intervalo") {
                 valueCell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
