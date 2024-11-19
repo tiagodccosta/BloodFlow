@@ -613,13 +613,20 @@ async function extractParametersAndValuesFromBloodTest(text) {
         {
             role: "system",
             content: `
-                Extrai a data da análise. O formato deve ser: "DD/MM/AAAA". Esta estará mais ao início do texto e perto de algo como "Data da análise: 01/01/2024", por exemplo, ou "Colheita: 01/01/2024".
+                Extrai a data da análise. O formato deve ser: "DD/MM/AAAA". Esta estará mais ao início do texto e perto de algo como "Data da análise: 01/01/2024", por exemplo.
 
-                Extrai os parâmetros, valores e intervalos normais (se disponíveis) dos resultados de análises de sangue fornecidos. Retorne os resultados no seguinte formato:
-                
-                Nome do Parâmetro: valor atual unidades : (intervalo mínimo - intervalo máximo)
+                Extrai os parâmetros, valores e indique se o valor está fora do intervalo normal ou não (se o intervalo estiver disponível). Retorne os resultados no seguinte formato:
 
-                Se o intervalo não estiver disponível, retorne apenas o valor e as unidades.
+                Nome do Parâmetro: valor atual unidades : (dentro ou fora do intervalo)
+
+                Segue este exemplo de formato para a resposta:
+                Eritrócitos: 4,75 x10¹²/L : dentro do intervalo  
+                Hemoglobina: 13,5 g/dL : dentro do intervalo  
+                Hematócrito: 41,5 % : dentro do intervalo  
+                Volume Globular Médio: 87,4 fL : dentro do intervalo  
+                Hemoglobina Globular Média: 28,4 pg : dentro do intervalo
+
+                Se o intervalo não estiver disponível, retorne apenas o valor e as unidades com a indicação "ND".  
                 Coloque um parâmetro e valor por linha, seguido pela data da análise na última linha.
             `,
         },
@@ -645,22 +652,36 @@ async function extractParametersAndValuesFromBloodTest(text) {
     console.log('Output text:', outputText);
 
     const parsedData = outputText.split('\n').map(line => {
-        const match = line.match(/^(.*?):\s*([\d.,]+(?: x10¹²\/L| x10⁹\/L| [%]| mg\/dL| g\/dL| pg| fL| U\/L| %| x)?(?: \[.*?\])?)\s*(?:\:\s*\((<|>)?\s*([\d.,-]+)\s*-\s*([\d.,-]+|Até \d+)?\))?/);
-        if (!match) return null;
+        console.log('Parsing line:', line);
     
-        const parameter = match[1].trim();
-        const value = match[2].trim();
-        const rangeType = match[4] || null;
-        const minRange = match[5] ? parseFloat(match[5].replace(',', '.')) : null;
-        const maxRange = match[6] ? parseFloat(match[6].replace(',', '.')) : null;
+        // Using exec with a global regex to handle multiple matches in a line
+        const regex = /([a-zA-Z0-9\sáéíóúãõçÁÉÍÓÚÀàãõ,\(\)\/\-]+(?:\s?\(.*?\))?):\s*([\d.,><]+(?:\s?(?:x10¹²\/L|x10⁹\/L|[%]|mg\/dL|g\/dL|pg|fL|U\/L|mUI\/L|mmol\/L|μg\/L|ng\/mL|mL\/min\/1,73\s?m2|mm\/h|Spec\ grav|pH|mL|L|ng\/L|g\/dL|mL|mg\/g|mL\/kg|%)?)\s*|\s?ND)\s*:\s*(dentro|fora)\sdo\sintervalo/g;
+        let match;
+        const result = [];
     
-        return { parameter, value, rangeType, minRange, maxRange };
+        // Loop through all matches in the line using exec()
+        while ((match = regex.exec(line)) !== null) {
+    
+            const parameter = match[1].trim(); 
+            const value = match[2].trim();
+            const status = match[3].trim();
+    
+            result.push({ parameter, value, status });
+        }
+
+        if (result.length === 0) {
+            console.log('Unparsed line:', line);
+        }
+
+        return result.length > 0 ? result : null;
     }).filter(Boolean);
-    
+
     const dateRegex = /\b(\d{2}\/\d{2}\/\d{4})\b/;
     const dateMatch = outputText.match(dateRegex);
     const testDate = dateMatch ? dateMatch[0] : null;
-    
+
+    console.log('Parsed data:', parsedData);
+
     return { parameters: parsedData, testDate };
 }
 
@@ -684,22 +705,28 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
     const workbook = existingWorkbook || new ExcelJS.Workbook();
     let worksheet = workbook.getWorksheet('Blood Test Results');
 
+    const flatData = newTestData.flat();
+
     if (!worksheet) {
         worksheet = workbook.addWorksheet('Blood Test Results');
         worksheet.addRow(['Parameters', testDate]);
 
-        newTestData.forEach((data) => {
-            console.log(data.minRange, data.maxRange);
+        flatData.forEach((data) => {
             if (data.parameter === 'Data da análise') return;
 
             const row = worksheet.addRow([data.parameter, data.value]);
 
-            if (data.minRange !== null && data.maxRange !== null) {
-                const numericValue = parseFloat(data.value.replace(/[^\d.-]/g, ""));
+            if (data.status === "fora") {
                 row.getCell(2).fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: numericValue >= data.minRange && numericValue <= data.maxRange ? 'FF00FF00' : 'FFFF0000' }
+                    fgColor: { argb: 'FFFF0000' }
+                };
+            } else if (data.status === "dentro") {
+                row.getCell(2).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF0ca500' }
                 };
             }
         });
@@ -715,8 +742,7 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
             }
         });
 
-        newTestData.forEach((data) => {
-            console.log(data.minRange, data.maxRange);
+        flatData.forEach((data) => {
             if (data.parameter === 'Data da análise') return;
 
             let row = parameterRowMap[data.parameter];
@@ -726,12 +752,17 @@ async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) 
             const valueCell = row.getCell(newColumnIndex);
             valueCell.value = data.value;
 
-            if (data.minRange !== null && data.maxRange !== null) {
-                const numericValue = parseFloat(data.value.replace(/[^\d.-]/g, ""));
+            if (data.status === "fora") {
                 valueCell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: numericValue >= data.minRange && numericValue <= data.maxRange ? 'FF00FF00' : 'FFFF0000' }
+                    fgColor: { argb: 'FFFF0000' }
+                };
+            } else if (data.status === "dentro") {
+                valueCell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF0ca500' }
                 };
             }
         });
