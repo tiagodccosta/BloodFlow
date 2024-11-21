@@ -41,7 +41,7 @@ const Hero = () => {
         refresh
       />
 
-      <div className="relative z-10 text-center -mt-40 max-w-[1050px]">
+      <div className="relative z-10 text-center -mt-40 max-w-[1000px]">
         <div className={`mb-8 transition-transform duration-500 ease-out ${topButtonVisible ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'}`}>
             <a
               href="https://calendly.com/tiago-costa-bloodflow" target="_blank" rel="noopener noreferrer" className="inline-flex items-center" >
@@ -58,7 +58,7 @@ const Hero = () => {
           </div>
           
           <div className='mb-5 sm:mb-8'>
-              <GradualSpacing className=" text-2xl sm:text-4xl md:text-6xl font-semibold text-transparent bg-gradient-to-b from-black/80 to-gray-400/80 bg-clip-text leading-none"
+              <GradualSpacing className=" text-3xl sm:text-4xl md:text-6xl font-semibold text-transparent bg-gradient-to-b from-black/80 to-gray-400/80 bg-clip-text leading-none"
               text={t('title2')} />
           </div>
 
