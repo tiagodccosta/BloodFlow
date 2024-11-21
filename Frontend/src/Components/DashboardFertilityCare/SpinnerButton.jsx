@@ -6,7 +6,7 @@ const SpinnerButton = ({ onClick, isLoading, children }) => {
       <button 
         onClick={onClick}
         disabled={isLoading}
-        className="w-40 text-sm md:w-52 rounded-md font-semibold py-2 md:py-4 text-white mt-1 md:mt-4 bg-[#ff0000] flex items-center justify-center relative"
+        className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white mt-1 md:mt-4 bg-[#ff0000] flex items-center justify-center relative"
       >
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center">
