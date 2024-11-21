@@ -312,9 +312,6 @@ const Dashboard = () => {
         }
     };
 
-    
-
-
     return (
         loadingWindow ? (
             <Spinner />
