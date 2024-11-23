@@ -53,18 +53,18 @@ const Navbar = () => {
             <img className="w-44 mt-10 -ml-10 sm:-ml-4" src={BloodFlowLogo} alt="/" />
             <ul className='hidden lg:flex'> 
                 <img className='w-10 h-10 mt-2 mr-4 cursor-pointer' src={flag} alt="\" onClick={handleFlagClick} />    
-                <button className='bg-black w-[150px] ml-4 rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-1 py-3 text-white'>
-                <RouterLink to="/login">{t('login')}</RouterLink></button>
+                <button className='bg-black w-[170px] ml-4 rounded-lg font-normal text-sm hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-1 py-3 text-white'>
+                <RouterLink to="/login">{t('navButton')}</RouterLink></button>
             </ul>
-            <div on onClick={handleNav} className='block lg:hidden'>
+            <div onClick={handleNav} className='block lg:hidden'>
                 {nav ? <AiOutlineClose size = {20} /> : <AiOutlineMenu size={20} />}
             </div>
             <div className={nav ? 'fixed left-0 top-0 w-[60%] h-full border-r border-r-gray-700 bg-white ease-in-out duration-500 z-50' : 'fixed left-[-100%]'}>
                 <img className="w-44" src={BloodFlowLogo} alt="/" />
                 <ul className='px-4'> 
                     <img className='w-10 h-10 ml-3 cursor-pointer' src={flag} alt="\" onClick={handleFlagClick} />     
-                    <button className='bg-black w-[150px] ml-4 rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 mt-6 py-3 text-white'>
-                    <RouterLink to="/login">{t('login')}</RouterLink></button>
+                    <button className='bg-black w-[170px] ml-4 rounded-lg hover:scale-y-105 font-normal text-sm hover:scale-x-105 ease-in-out duration-300 mt-6 py-3 text-white'>
+                    <RouterLink to="/login">{t('navButton')}</RouterLink></button>
                 </ul>
             </div>
         </div>

@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const { marked } = require('marked');
-const { Storage } = require('@google-cloud/storage');
 const admin = require('firebase-admin');
 const firebase = require('firebase/app');
 const { getAuth, signInWithEmailAndPassword } = require('firebase/auth');
@@ -19,7 +18,7 @@ const jobQueue = new Map();
 const { Readable } = require('stream');
 const pdfParser = require('pdf-parse');
 const { exec } = require('child_process');
-
+const ExcelJS = require('exceljs');
 require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -50,12 +49,6 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const serviceAccount = JSON.parse(Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8'));
-
-const storage = new Storage({
-    credentials: serviceAccount,
-});
-
 const firebaseAccount = JSON.parse(Buffer.from(process.env.FIREBASE_ACCOUNT_KEY, 'base64').toString('utf-8'));
 
 admin.initializeApp({
@@ -68,6 +61,8 @@ firebase.initializeApp({
   });
 
 const bucketName = process.env.STORAGE_BUCKET;
+
+const storage = admin.storage();
 
 app.get('/', async (req, res) => {
     res.send('Welcome to the BloodFlow application!');
@@ -573,6 +568,7 @@ async function checkPDFPasswordProtection(pdfBuffer) {
     }
 }
 
+
 app.post('/efp/submit-password', async (req, res) => {
     const { pdfFile, password, userName, userAge, medicalCondition } = req.body;
   
@@ -607,6 +603,199 @@ app.post('/efp/analyse-blood-test', async (req, res) => {
     } catch (error) {
         console.error("Error analyzing blood test:", error);
         res.status(500).json({ error: "Failed to analyze blood test" });
+    }
+});
+
+async function extractParametersAndValuesFromBloodTest(text) {
+    const url = "https://api.openai.com/v1/chat/completions";
+
+    const messages = [
+        {
+            role: "system",
+            content: `
+                Extract the analysis date in the format: "DD/MM/YYYY". This will usually appear near the beginning of the text and close to phrases like "Data da análise: 01/01/2024".
+
+                Extract all parameters, values, units, and whether the value is within the normal range. Return the results in the following JSON structure:
+
+                {
+                    "analysisDate": "DD/MM/YYYY",
+                    "parameters": [
+                        {
+                            "parameter": "Eritrócitos",
+                            "value": "5.19 x10¹²/L",
+                            "status": "dentro do intervalo"
+                        },
+                        {
+                            "parameter": "Hemoglobina",
+                            "value": "15.4 g/dL",
+                            "status": "fora do intervalo"
+                        }
+                    ]
+                }
+                
+                Always extract the full name of the parameter, not just an abbreviation. Like "eGFR-CKD-EPI 2009 (18-70 anos)" instead of just "eGFR-CKD-EPI 2009".
+                If a parameter appears multiple times specify the parameter that appears again type like "Hemoglobina (Urina)".
+                Always extract the full unit of measurement, like "x10¹²/L" instead of just "x10¹²".
+                If a parameter lacks a reference range, use "ND" for the status.
+            `,
+        },
+        {
+            role: "user",
+            content: text
+        }
+    ];
+
+    const response = await axios.post(url, {
+        model: "gpt-4o-2024-08-06",
+        messages: messages,
+        max_tokens: 5000,
+        n: 1
+    }, {
+        headers: {
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    let outputText = response.data.choices[0].message.content;
+
+    if (outputText.startsWith("```json")) {
+        outputText = outputText.slice(7, -3).trim();
+    } else if (outputText.startsWith("```")) {
+        outputText = outputText.slice(3, -3).trim();
+    }
+
+    let parsedResponse;
+    try {
+        parsedResponse = JSON.parse(outputText);
+    } catch (error) {
+        console.error('Failed to parse JSON from the model:', error);
+        console.log('Output text:', outputText);
+        return { parameters: null, testDate: null };
+    }
+
+    const testDate = parsedResponse.analysisDate || null;
+    const parameters = parsedResponse.parameters || [];
+
+    console.log('Parsed data:', { parameters, testDate });
+
+    return { parameters, testDate };
+}
+
+async function downloadExcelFile(patientId, fileName) {
+    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}.xlsx`);
+    const exists = (await file.exists())[0];
+    if (!exists) return null;
+
+    const fileBuffer = await file.download();
+    const workbook = new ExcelJS.Workbook();
+    try {
+        await workbook.xlsx.load(fileBuffer[0]);
+        return workbook;
+    } catch (error) {
+        console.error("Error reading Excel file:", error);
+        return null;
+    }
+}
+
+async function updateOrCreateExcelFile(existingWorkbook, newTestData, testDate) {
+    const workbook = existingWorkbook || new ExcelJS.Workbook();
+    let worksheet = workbook.getWorksheet('Blood Test Results');
+
+    const flatData = newTestData.flat();
+
+    if (!worksheet) {
+        worksheet = workbook.addWorksheet('Blood Test Results');
+        worksheet.addRow(['Parameters', testDate]);
+
+        flatData.forEach((data) => {
+            if (data.parameter === 'Data da análise') return;
+
+            const row = worksheet.addRow([data.parameter, data.value]);
+
+            if (data.status === "fora do intervalo") {
+                row.getCell(2).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFFF0000' }
+                };
+            }
+        });
+    } else {
+        const headerRow = worksheet.getRow(1);
+        const newColumnIndex = headerRow.actualCellCount + 1;
+        headerRow.getCell(newColumnIndex).value = testDate;
+
+        const parameterRowMap = {};
+        worksheet.eachRow((row, rowIndex) => {
+            if (rowIndex > 1) {
+                parameterRowMap[row.getCell(1).value] = row;
+            }
+        });
+
+        flatData.forEach((data) => {
+            if (data.parameter === 'Data da análise') return;
+
+            let row = parameterRowMap[data.parameter];
+            if (!row) {
+                row = worksheet.addRow([data.parameter]);
+            }
+            const valueCell = row.getCell(newColumnIndex);
+            valueCell.value = data.value;
+
+            if (data.status === "fora do intervalo") {
+                valueCell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFFF0000' }
+                };
+            }
+        });
+    }
+
+    return workbook;
+}
+
+async function saveWorkbookToStorage(workbook, patientId, fileName) {
+    const fileBuffer = await workbook.xlsx.writeBuffer();
+
+    const file = storage.bucket(bucketName).file(`FertilityCare/${patientId}/${fileName}.xlsx`);
+    await file.save(fileBuffer, {
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    const options = {
+        action: 'read',
+        expires: Date.now() + 3600 * 1000,
+    };
+
+    const signedUrls = await file.getSignedUrl(options);
+    return signedUrls[0];
+}
+
+app.post('/fertility-care/generate-excel', async (req, res) => {
+    const { patientId, fileURL, excelFileName } = req.body;
+
+    try {
+        const pdfResponse = await axios.get(fileURL, { responseType: 'arraybuffer' });
+        const pdfText = await pdfParser(pdfResponse.data);
+
+        const { parameters, testDate } = await extractParametersAndValuesFromBloodTest(pdfText.text);
+
+        if (!testDate) {
+            throw new Error("Test date could not be extracted from the blood test.");
+        }
+
+        let workbook = await downloadExcelFile(patientId, excelFileName);
+
+        workbook = await updateOrCreateExcelFile(workbook, parameters, testDate);
+
+        const signedUrl = await saveWorkbookToStorage(workbook, patientId, excelFileName);
+
+        res.status(200).send({ message: "Excel file updated successfully.", url: signedUrl });
+    } catch (error) {
+        console.error("Error generating Excel file:", error);
+        res.status(500).send({ error: "Failed to generate Excel file." });
     }
 });
 

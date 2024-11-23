@@ -8,6 +8,7 @@ import Footer from './Components/HomePage/Footer';
 import SignUpPage from './Components/SignUpPage/SignUpPage';
 import LoginPage from './Components/LoginPage/LoginPage';
 import Dashboard from './Components/Dashboard/Dashboard';
+import FertilityCareDashboard from './Components/DashboardFertilityCare/Dashboard';
 import ForgotPassword from './Components/LoginPage/ForgotPassword';
 import usePageTracking from './PageTracking';
 
@@ -29,6 +30,7 @@ function AppRoutes() {
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/fertility-care-dashboard" element={<FertilityCareDashboard />} />
       <Route path="/forgotpassword" element={<ForgotPassword />} />
     </Routes>
   );
