@@ -28,6 +28,8 @@ const Dashboard = () => {
     const [excelFile, setExcelFile] = useState(null);
     const [generatingExcelFile, setGeneratingExcelFile] = useState(false);
 
+    const BASE_URL = process.env.REACT_APP_BASE_URL;
+
     const fetchPatients = async () => {
         try {
             const patientsCollection = collection(db, 'FertilityCare');
@@ -266,7 +268,7 @@ const Dashboard = () => {
     const generateExcelFileBackend = async (patientId, fileURL, excelFileName) => {
 
         try {
-            const response = await fetch('http://localhost:4000/fertility-care/generate-excel', {
+            const response = await fetch(`${BASE_URL}/fertility-care/generate-excel`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
