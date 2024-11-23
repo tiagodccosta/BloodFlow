@@ -44,6 +44,7 @@ const Dashboard = () => {
             setLoadingWindow(false);
         }
     };
+    
 
     const fetchPatientTests = async (patientId) => {
         try {
