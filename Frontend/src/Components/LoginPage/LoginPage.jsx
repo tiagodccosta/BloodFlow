@@ -58,7 +58,8 @@ function LoginPage() {
         if (userData) {
           toast.success(`${t('bemVindo')} ${userData.username}!`);
     
-          if (userData.role === 'clinic') {
+          if (userData.role === 'fertilitycare') {
+            console.log(userData.role);
             navigate('/fertility-care-dashboard', { state: { user: userData } });
           } else {
             navigate('/dashboard', { state: { user: userData } });
