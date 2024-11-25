@@ -17,15 +17,6 @@ import remarkGfm from 'remark-gfm';
 import DeletePopup from './DeletePopup';
 import NewFilePopup from './NewFilePopup';
 import EditPersonalInfo from './EditPersonalInfo';
-
-/*
-import ImageClinica2 from "../../Assets/clinicaSaoCristovao_2.jpeg";
-import ImageClinica3 from "../../Assets/clinicaSaoCristovao_3.jpeg";
-import ImageClinica4 from "../../Assets/clinicaSaoCristovao_4.jpeg";
-import ImageClinica5 from "../../Assets/clinicaSaoCristovao_5.jpeg";
-import bloodTestResults from "../../Assets/bloodTestResults.png";
-*/
-
 import Spinner from '../Spinner';
 import { useTranslation } from 'react-i18next';
 
@@ -50,17 +41,14 @@ function Dashboard() {
     const [index, setIndex] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [showNewFileModal, setShowNewFileModal] = useState(false);
-    //const [userLocation, setUserLocation] = useState(null);
-    // const [sendingEmail, setSendingEmail] = useState(false);
     const [showEditPopup, setShowEditPopup] = useState(false);
     const [loadingWindow, setLoadingWindow] = useState(true);
-    // const [availability, setAvailability] = useState([{ day: '', startTime: '', endTime: '' }]);
-    // const [downloadingAnalysis, setDownloadingAnalysis] = useState(false);
     const analysisContainerRef = useRef(null);
+    const [smartReport, setSmartReport] = useState(null);
+    const [activeTab, setActiveTab] = useState("smartReport");
 
     const { t } = useTranslation();
 
-    // const mapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
     const BASE_URL = process.env.REACT_APP_BASE_URL;
 
     useEffect(() => {
@@ -256,25 +244,33 @@ function Dashboard() {
             
             const text = await convertPDFToText(downloadURL);
         
-            const analysis = await analyseBloodTest(text);
-            setDisplayedText("");
-            setAnalysisResult(analysis);
+            const [fullAnalysisResult, smartReportResult] = await Promise.all([
+                analyseBloodTest(text), 
+                generateSmartReport(text)
+            ]);
     
-            const score = extractScoreFromAnalysis(analysis);
-            setScores([...scores, { time: new Date().toLocaleDateString(), score }]);
-            setAnalysisPerformed(true);
-
-            const fileMetadata = await getMetadata(fileRef);
-
-            await updateMetadata(fileRef, {
-                customMetadata: {
-                    ...fileMetadata.customMetadata,
-                    score: parseFloat(score),
-                    analysis: analysis
-                }
-            });
-
-            await fetchUpdatedScores();
+            if (fullAnalysisResult && smartReportResult) {
+                setDisplayedText("");
+                setAnalysisResult(fullAnalysisResult);
+                setSmartReport(smartReportResult);
+    
+                const score = extractScoreFromAnalysis(fullAnalysisResult);
+                setScores([...scores, { time: new Date().toLocaleDateString(), score }]);
+                setAnalysisPerformed(true);
+    
+                const fileMetadata = await getMetadata(fileRef);
+                await updateMetadata(fileRef, {
+                    customMetadata: {
+                        ...fileMetadata.customMetadata,
+                        score: parseFloat(score),
+                        analysis: fullAnalysisResult
+                    }
+                });
+    
+                await fetchUpdatedScores();
+            } else {
+                console.warn("One or both analyses failed to complete");
+            }
         } catch (error) {
             toast.error(t('erroAnalise'));
             setAnalysisPerformed(false);
@@ -423,6 +419,37 @@ function Dashboard() {
             throw error; 
         }
     };
+
+    const generateSmartReport = async (text) => {
+        try {
+            const language = getLanguageFromDomain();
+    
+            const response = await fetch(`http://localhost:4000/generate-smart-report`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text, language }),
+            });
+    
+            if (!response.ok) {
+                console.error('Failed to generate smart report');
+                return null;
+            }
+    
+            const data = await response.json();
+            return data.analysisSmartReport;
+    
+        } catch (error) {
+            console.error('Error generating smart report:', error);
+            return null;
+        }
+    };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+      };
+
     const extractScoreFromAnalysis = (analysis) => {
         const match = analysis.match(/(?:\*\*)?Score(?:\*\*)?:\s*(\d+(\.\d+)?)/i);
         return match ? parseFloat(match[1]) : 0;
@@ -816,79 +843,163 @@ function Dashboard() {
                         )}
                     </div>
 
-                        {/* Test Score container */}
-                        <div className="bg-white mb-4 shadow-md rounded-md">
-                        {selectedFileData && selectedFile == null ? (
-                            <>
-                                <div className="text-center py-2 md:py-4">
-                                    <h1 className="text-lg md:text-xl font-bold text-black mb-4 md:mb-6 mt-4 px-3">{t('scoreProgress')}</h1>
-                                </div>
-                                {/* Left column */}
-                                <div className="flex flex-col md:flex-row justify-center items-center">
-                                    <div className="w-full md:w-1/3 flex flex-col justify-center items-center p-2 md:pl-4">
-                                        <div className="mb-2 md:mb-4">
-                                            <CircularChart score={ fileScores.length > 0 ? fileScores[fileScores.length - 1].score : fileScores[fileScores.length - 2].score } />
-                                        </div>
-                                        <p className="text-center text-sm md:text-lg">{t('lastScoreResult')}</p>
+                    {/* Test Score container */}
+                    <div className="bg-white mb-4 shadow-md rounded-md">
+                    {selectedFileData && selectedFile == null ? (
+                        <>
+                            <div className="text-center py-2 md:py-4">
+                                <h1 className="text-lg md:text-xl font-bold text-black mb-4 md:mb-6 mt-4 px-3">{t('scoreProgress')}</h1>
+                            </div>
+                            {/* Left column */}
+                            <div className="flex flex-col md:flex-row justify-center items-center">
+                                <div className="w-full md:w-1/3 flex flex-col justify-center items-center p-2 md:pl-4">
+                                    <div className="mb-2 md:mb-4">
+                                        <CircularChart score={ fileScores.length > 0 ? fileScores[fileScores.length - 1].score : fileScores[fileScores.length - 2].score } />
                                     </div>
-                                    {/* Right column */}
-                                    <div className="w-full -ml-10 md:w-2/3 p-2 md:pr-10 py-2 md:py-4">
-                                        <MyBarChart data={fileScores} selectedFileMetadata={selectedFileData} onBarClick={handleFileClick} />
-                                    </div>
+                                    <p className="text-center text-sm md:text-lg">{t('lastScoreResult')}</p>
                                 </div>
-                            </>
-                        ) : (
-                            <div className="text-center py-2 md:py-5">
-                                <h1 className="text-lg md:text-xl font-medium text-black">{t('scoreProgress')}</h1>
-                                <div className="w-full p-2 md:p-6 flex items-center justify-center">
-                                    <h1 className="text-lg md:text-xl font-bold text-gray-500 p-4 md:p-10">{t('noData')}</h1>
+                                {/* Right column */}
+                                <div className="w-full -ml-10 md:w-2/3 p-2 md:pr-10 py-2 md:py-4">
+                                    <MyBarChart data={fileScores} selectedFileMetadata={selectedFileData} onBarClick={handleFileClick} />
                                 </div>
                             </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-2 md:py-5">
+                            <h1 className="text-lg md:text-xl font-medium text-black">{t('scoreProgress')}</h1>
+                            <div className="w-full p-2 md:p-6 flex items-center justify-center">
+                                <h1 className="text-lg md:text-xl font-bold text-gray-500 p-4 md:p-10">{t('noData')}</h1>
+                            </div>
+                        </div>
+                    )}
+                    </div>
+
+                    {/* Analysis Results Container */}
+                    <div
+                        id="analysisContainer"
+                        ref={analysisContainerRef}
+                        className="bg-white mb-6 shadow-md rounded-md p-6"
+                        >
+                        {/* No Data message */}
+                        {!analysisPerformed && !loading && (
+                            <div>
+                            <h1 className="text-xl font-bold text-black mb-4">
+                                {t("yourAnalysisBy")}{" "}
+                                <span style={{ color: "#ff0000" }}>{t("bloodFlowAI")}</span>
+                            </h1>
+                            <h1 className="text-xl font-bold text-gray-500 mb-4 text-center py-10">
+                                {t("analyseFileResultsHere")}
+                            </h1>
+                            </div>
                         )}
-                        </div>
 
-                        {/* Analysis Results Container */}
-                        <div id="analysisContainer" ref={analysisContainerRef} className="bg-white mb-6 shadow-md rounded-md p-6">
-                            {/* No Data message only if analysis hasn't been performed */}
-                            {!analysisPerformed && !loading && (
-                                <div>
-                                    <h1 className="text-xl font-bold text-black mb-4">
-                                        {t('yourAnalysisBy')} <span style={{ color: '#ff0000' }}>{t('bloodFlowAI')}</span>
-                                    </h1>
-                                    <h1 className="text-xl font-bold text-gray-500 mb-4 text-center py-10">{t('analyseFileResultsHere')}</h1>
+                        {/* Analysis content */}
+                        {analysisPerformed && !loading && (
+                            <>
+                            <h1 className="text-xl font-bold text-black mb-4">
+                                {t("yourAnalysisBy")}{" "}
+                                <span style={{ color: "#ff0000" }}>{t("bloodFlowAI")}</span>
+                            </h1>
+
+                            {/* Tabs */}
+                            <div className="flex justify-center border-b mb-4">
+                                <button
+                                onClick={() => handleTabChange("smartReport")}
+                                className={`px-4 py-2 ${
+                                    activeTab === "smartReport"
+                                    ? "border-b-2 border-red-500 text-red-500 font-bold"
+                                    : "text-gray-600"
+                                }`}
+                                >
+                                Smart Report
+                                </button>
+                                <button
+                                onClick={() => handleTabChange("fullAnalysis")}
+                                className={`px-4 py-2 ${
+                                    activeTab === "fullAnalysis"
+                                    ? "border-b-2 border-red-500 text-red-500 font-bold"
+                                    : "text-gray-600"
+                                }`}
+                                >
+                                Full Analysis
+                                </button>
+                            </div>
+
+                            {/* Tab Content */}
+                            {activeTab === "smartReport" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {smartReport && smartReport.parameters?.length > 0 ? (
+                                    smartReport.parameters.map((param, index) => (
+                                        <div
+                                            key={index}
+                                            className="bg-white p-6 shadow-lg rounded-lg border border-gray-300 flex flex-col relative"
+                                        >
+                                            {/* Status indicator */}
+                                            <div
+                                                className={`absolute top-4 right-4 w-4 h-4 rounded-full ${
+                                                    param.status === "high"
+                                                        ? "bg-red-500"
+                                                        : param.status === "low"
+                                                        ? "bg-blue-500"
+                                                        : "bg-green-500"
+                                                }`}
+                                            ></div>
+                                            
+                                            {/* Parameter Name */}
+                                            <h2 className="text-xl font-bold text-black mb-2">
+                                                {param.name}
+                                            </h2>
+                                            
+                                            {/* Parameter Value and Range */}
+                                            <p className="text-lg">
+                                                <strong>Value:</strong>{" "}
+                                                <span className="font-semibold">{param.value}</span>
+                                            </p>
+                                            <p className="text-lg">
+                                                <strong>Range:</strong>{" "}
+                                                <span className="font-semibold">{param.range}</span>
+                                            </p>
+                                            
+                                            {/* Insights */}
+                                            <p className="mt-4 text-gray-600">{param.insight}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="col-span-1 md:col-span-2 text-center text-gray-500">
+                                        No smart report available. Please generate a smart report to see the results.
+                                    </p>
+                                )}
+                            </div>
+                            )}
+
+                            {activeTab === "fullAnalysis" && (
+                                <div className="typing-effect">
+                                <ReactMarkdown
+                                    children={displayedText}
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                    strong: ({ children }) => (
+                                        <strong className="text-[#ce3d3d]">{children}</strong>
+                                    ),
+                                    p: ({ children }) => <p className="my-4">{children}</p>,
+                                    }}
+                                />
                                 </div>
                             )}
+                            </>
+                        )}
 
-                            {/* Analysis content shown if analysis has been performed */}
-                            {analysisPerformed && !loading && (
-                                <>
-                                    <h1 className="text-xl font-bold text-black mb-4">
-                                        {t('yourAnalysisBy')} <span style={{ color: '#ff0000' }}>{t('bloodFlowAI')}</span>
-                                    </h1>
-                                    <div className="typing-effect">
-                                        <ReactMarkdown
-                                        children={displayedText}
-                                        remarkPlugins={[remarkGfm]}
-                                        components={{
-                                            strong: ({ children }) => (
-                                              <strong className="text-[#ce3d3d]">{children}</strong>
-                                            ),
-                                            p: ({ children }) => (
-                                              <p className="my-4">{children}</p>
-                                            )
-                                          }}
-                                        />
-                                    </div> 
-                                </>
-                            )}
-
-                            {/* Loading animation shown while analysis is being performed */}
-                            {loading && (
-                                <div className="flex items-center justify-center">
-                                    <img src={BloodFlowLogoNL} alt="Logo" className="w-44 animate-spin" />
-                                </div>
-                            )}
-                        </div>
+                        {/* Loading Animation */}
+                        {loading && (
+                            <div className="flex items-center justify-center">
+                            <img
+                                src={BloodFlowLogoNL}
+                                alt="Logo"
+                                className="w-44 animate-spin"
+                            />
+                            </div>
+                        )}
+                    </div>
 
 
                     {/* 

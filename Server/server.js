@@ -799,13 +799,16 @@ app.post('/fertility-care/generate-excel', async (req, res) => {
     }
 });
 
-async function generateSmartReport(text) {
+async function generateSmartReport(text, languageDirective) {
     const url = "https://api.openai.com/v1/chat/completions";
+
+    console.log('Generating smart report');
 
     const messages = [
         {
             role: "system",
             content: `
+                ${languageDirective}
                 Extract all parameters, values, units, and whether the value is within the normal range. Return the results in the following JSON structure:
 
                     {
@@ -831,6 +834,8 @@ async function generateSmartReport(text) {
                     If a parameter appears multiple times specify the parameter that appears again type like "Hemoglobina (Urina)".
                     Always extract the full unit of measurement, like "x10¹²/L" instead of just "x10¹²".
                     If a parameter lacks a reference range, use "ND" for the status.
+
+                    Status can be "normal", "low", "high", or "ND" (Not Detected).
                     
                     The insights should be concise and informative, providing a brief explanation of the significance of the value and its implications for health.
             `,
@@ -880,9 +885,15 @@ async function generateSmartReport(text) {
 
 app.post('/generate-smart-report', async (req, res) => {
     try {
-        const { text } = req.body;
+        const { text, language } = req.body;
 
-        const analysisSmartReport = await generateSmartReport(text);
+        const languageDirective = language === 'en'
+            ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo."
+            : "Por favor, responde ao paciente em Português.";
+
+        const analysisSmartReport = await generateSmartReport(text, languageDirective);
+
+        console.log('Smart report generated:', analysisSmartReport);
 
         res.json({ analysisSmartReport });
 
