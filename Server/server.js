@@ -799,6 +799,100 @@ app.post('/fertility-care/generate-excel', async (req, res) => {
     }
 });
 
+async function generateSmartReport(text) {
+    const url = "https://api.openai.com/v1/chat/completions";
+
+    const messages = [
+        {
+            role: "system",
+            content: `
+                Extract all parameters, values, units, and whether the value is within the normal range. Return the results in the following JSON structure:
+
+                    {
+                        "parameters": [
+                            {
+                                "name": "Hemoglobin",
+                                "value": "15.4 g/L",
+                                "range": "13.0 g/L - 17.0 g/L",
+                                "status": "normal",
+                                "insight": "Hemoglobin level is within the normal range, indicating good oxygen-carrying capacity."
+                            },
+                            {
+                                "name": "CK",
+                                "value": "513",
+                                "range": "> 200",
+                                "status": "high",
+                                "insight": "CK level is outise the normal range, indicating potential muscle damage."
+                            }
+                        ]
+                    }
+                    
+                    Always extract the full name of the parameter, not just an abbreviation. Like "eGFR-CKD-EPI 2009 (18-70 anos)" instead of just "eGFR-CKD-EPI 2009".
+                    If a parameter appears multiple times specify the parameter that appears again type like "Hemoglobina (Urina)".
+                    Always extract the full unit of measurement, like "x10¹²/L" instead of just "x10¹²".
+                    If a parameter lacks a reference range, use "ND" for the status.
+                    
+                    The insights should be concise and informative, providing a brief explanation of the significance of the value and its implications for health.
+            `,
+        },
+        {
+            role: "user",
+            content: text
+        }
+    ];
+
+    const response = await axios.post(url, {
+        model: "gpt-4o-2024-08-06",
+        messages: messages,
+        max_tokens: 10000,
+        n: 1
+    }, {
+        headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    let outputText = response.data.choices[0].message.content;
+
+    if (outputText.startsWith("```json")) {
+        outputText = outputText.slice(7, -3).trim();
+    } else if (outputText.startsWith("```")) {
+        outputText = outputText.slice(3, -3).trim();
+    } 
+
+    let parsedResponse;
+    try {
+        parsedResponse = JSON.parse(outputText);
+    } catch (error) {
+        console.error('Failed to parse JSON from the model:', error);
+        console.log('Output text:', outputText);
+        return { parameters: null };
+    }
+
+    const parameters = parsedResponse.parameters || [];
+
+    console.log('Parsed data:', { parameters });
+
+    return { parameters };
+}
+
+
+app.post('/generate-smart-report', async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        const analysisSmartReport = await generateSmartReport(text);
+
+        res.json({ analysisSmartReport });
+
+    } catch (error) {
+        console.error('Error generating smart report:', error);
+        res.status(500).json({ error: 'Failed to generate smart report' });
+    }
+});
+
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
