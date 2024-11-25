@@ -802,8 +802,6 @@ app.post('/fertility-care/generate-excel', async (req, res) => {
 async function generateSmartReport(text, languageDirective) {
     const url = "https://api.openai.com/v1/chat/completions";
 
-    console.log('Generating smart report');
-
     const messages = [
         {
             role: "system",
@@ -892,8 +890,6 @@ app.post('/generate-smart-report', async (req, res) => {
             : "Por favor, responde ao paciente em Português.";
 
         const analysisSmartReport = await generateSmartReport(text, languageDirective);
-
-        console.log('Smart report generated:', analysisSmartReport);
 
         res.json({ analysisSmartReport });
 

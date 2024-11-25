@@ -45,7 +45,7 @@ function Dashboard() {
     const [loadingWindow, setLoadingWindow] = useState(true);
     const analysisContainerRef = useRef(null);
     const [smartReport, setSmartReport] = useState(null);
-    const [activeTab, setActiveTab] = useState("smartReport");
+    const [activeTab, setActiveTab] = useState("fullAnalysis");
 
     const { t } = useTranslation();
 
@@ -904,16 +904,6 @@ function Dashboard() {
                             {/* Tabs */}
                             <div className="flex justify-center border-b mb-4">
                                 <button
-                                onClick={() => handleTabChange("smartReport")}
-                                className={`px-4 py-2 ${
-                                    activeTab === "smartReport"
-                                    ? "border-b-2 border-red-500 text-red-500 font-bold"
-                                    : "text-gray-600"
-                                }`}
-                                >
-                                Smart Report
-                                </button>
-                                <button
                                 onClick={() => handleTabChange("fullAnalysis")}
                                 className={`px-4 py-2 ${
                                     activeTab === "fullAnalysis"
@@ -923,6 +913,17 @@ function Dashboard() {
                                 >
                                 Full Analysis
                                 </button>
+
+                                <button
+                                onClick={() => handleTabChange("smartReport")}
+                                className={`px-4 py-2 ${
+                                    activeTab === "smartReport"
+                                    ? "border-b-2 border-red-500 text-red-500 font-bold"
+                                    : "text-gray-600"
+                                }`}
+                                >
+                                Smart Report
+                                </button>
                             </div>
 
                             {/* Tab Content */}
@@ -931,43 +932,45 @@ function Dashboard() {
                                 {smartReport && smartReport.parameters?.length > 0 ? (
                                     smartReport.parameters.map((param, index) => (
                                         <div
-                                            key={index}
-                                            className="bg-white p-6 shadow-lg rounded-lg border border-gray-300 flex flex-col relative"
-                                        >
-                                            {/* Status indicator */}
-                                            <div
-                                                className={`absolute top-4 right-4 w-4 h-4 rounded-full ${
-                                                    param.status === "high"
-                                                        ? "bg-red-500"
-                                                        : param.status === "low"
-                                                        ? "bg-blue-500"
-                                                        : "bg-green-500"
-                                                }`}
-                                            ></div>
-                                            
-                                            {/* Parameter Name */}
-                                            <h2 className="text-xl font-bold text-black mb-2">
-                                                {param.name}
-                                            </h2>
-                                            
-                                            {/* Parameter Value and Range */}
-                                            <p className="text-lg">
-                                                <strong>Value:</strong>{" "}
-                                                <span className="font-semibold">{param.value}</span>
-                                            </p>
-                                            <p className="text-lg">
-                                                <strong>Range:</strong>{" "}
-                                                <span className="font-semibold">{param.range}</span>
-                                            </p>
-                                            
-                                            {/* Insights */}
-                                            <p className="mt-4 text-gray-600">{param.insight}</p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="col-span-1 md:col-span-2 text-center text-gray-500">
-                                        No smart report available. Please generate a smart report to see the results.
+                                    key={index}
+                                    className="bg-white p-4 shadow-sm rounded-lg border border-gray-200 flex flex-col relative text-sm"
+                                    >
+                                    {/* Status indicator */}
+                                    <div
+                                        className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
+                                        param.status === "high"
+                                            ? "bg-red-500"
+                                            : param.status === "low"
+                                            ? "bg-blue-500"
+                                            : "bg-green-500"
+                                        }`}
+                                    ></div>
+                                    
+                                    {/* Parameter Name */}
+                                    <h2 className="text-lg font-semibold text-black mb-1"> {/* Reduced font size */}
+                                        {param.name}
+                                    </h2>
+                                    
+                                    {/* Parameter Value and Range */}
+                                    <p className="text-sm"> {/* Reduced text size */}
+                                        <strong>Value:</strong>{" "}
+                                        <span className="font-semibold">{param.value}</span>
                                     </p>
+                                    <p className="text-sm"> {/* Reduced text size */}
+                                        <strong>Range:</strong>{" "}
+                                        <span className="font-semibold">{param.range}</span>
+                                    </p>
+                                    
+                                    {/* Insights */}
+                                    <p className="mt-2 text-gray-600 text-sm"> {/* Reduced font size */}
+                                        {param.insight}
+                                    </p>
+                                    </div>
+                                ))
+                                ) : (
+                                <p className="col-span-1 md:col-span-2 text-center text-gray-500 text-sm">
+                                    No smart report available. Please generate a smart report to see the results.
+                                </p>
                                 )}
                             </div>
                             )}
@@ -1137,10 +1140,6 @@ function Dashboard() {
                         <div className="flex justify-center">
                             <img className="w-32 sm:w-40 md:w-52 -mt-4 sm:-mt-6 md:-mt-7" src={BloodFlowLogoNL} alt="/" />
                         </div>
-                        <p className="text-xs sm:text-sm md:text-sm font-bold text-black mx-4 sm:mx-10 md:mx-20 text-center pb-6 sm:pb-8 md:pb-10 -mt-4 sm:-mt-6 md:-mt-7">
-                            {t('footerText')}
-                        </p>
-
                     </div>
                 </div>
           )    
