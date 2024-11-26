@@ -1,7 +1,0 @@
-[
-    {
-      "origin": ["http://localhost:3000", "https://www.bloodflow.eu", "https://bloodflow.eu", "https://www.bloodflow.pt", "https://bloodflow.pt"],
-      "method": ["GET"],
-      "maxAgeSeconds": 3600
-    }
-  ]
