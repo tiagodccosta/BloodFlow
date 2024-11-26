@@ -45,6 +45,7 @@ function Dashboard() {
     const [loadingWindow, setLoadingWindow] = useState(true);
     const analysisContainerRef = useRef(null);
     const [smartReport, setSmartReport] = useState(null);
+    const [smartReportLoading, setSmartReportLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("fullAnalysis");
 
     const { t } = useTranslation();
@@ -183,24 +184,47 @@ function Dashboard() {
         try {
             const userId = auth.currentUser.uid;
             const fileRef = ref(storage, `bloodTestResults/${userId}/${fileName}`);
-
+    
+            const metadata = await getMetadata(fileRef);
+            setSelectedFileData(metadata);
+    
+            if (metadata.customMetadata?.analysis !== undefined) {
+                setDisplayedText(metadata.customMetadata.analysis);
+                setAnalysisPerformed(true);
+            } else {
+                setAnalysisPerformed(false);
+            }
+    
             try {
-                const metadata = await getMetadata(fileRef);
-                setSelectedFileData(metadata);
-                if(metadata.customMetadata?.analysis !== undefined) {
-                    setDisplayedText(metadata.customMetadata?.analysis);
-                    setAnalysisPerformed(true);
-                } else {
-                    setAnalysisPerformed(false);
-                }    
+                const smartReport = await fetchSmartReport(userId, fileName);
+                setSmartReport(smartReport);
             } catch (error) {
-                toast.error(t('erroFicheiroSelecionado'));
-                return;
+                console.warn("Failed to fetch Smart Report:", error);
+                setSmartReport(null);
             }
         } catch (error) {
-            toast.error(t('erroFicheiroAgain'));
+            console.error("Error handling file click:", error);
+            toast.error(t('erroFicheiroSelecionado'));
         }
     }, [t]);
+
+    const saveSmartReportToStorage = async (smartReport, userId, fileName) => {
+        const smartReportRef = ref(storage, `bloodTestResults/${userId}/${fileName}_smartReport.json`);
+        
+        const jsonData = JSON.stringify(smartReport);
+        const blob = new Blob([jsonData], { type: "application/json" });
+      
+        await uploadBytes(smartReportRef, blob);
+    };
+
+    const fetchSmartReport = async (userId, fileName) => {
+        const smartReportRef = ref(storage, `bloodTestResults/${userId}/${fileName}_smartReport.json`);
+        const downloadURL = await getDownloadURL(smartReportRef);
+      
+        const response = await fetch(downloadURL);
+        const smartReport = await response.json();
+        return smartReport;
+    };
 
     const handleAnalyzeClick = async () => {
         setLoading(true);
@@ -238,44 +262,65 @@ function Dashboard() {
 
         try {
             const userId = auth.currentUser.uid;
-    
+        
             const fileRef = ref(storage, `bloodTestResults/${userId}/${selectedFileData.name}`);
             const downloadURL = await getDownloadURL(fileRef);
-            
             const text = await convertPDFToText(downloadURL);
         
-            const [fullAnalysisResult, smartReportResult] = await Promise.all([
-                analyseBloodTest(text), 
-                generateSmartReport(text)
-            ]);
-    
-            if (fullAnalysisResult && smartReportResult) {
-                setDisplayedText("");
-                setAnalysisResult(fullAnalysisResult);
-                setSmartReport(smartReportResult);
-    
-                const score = extractScoreFromAnalysis(fullAnalysisResult);
-                setScores([...scores, { time: new Date().toLocaleDateString(), score }]);
-                setAnalysisPerformed(true);
-    
-                const fileMetadata = await getMetadata(fileRef);
-                await updateMetadata(fileRef, {
-                    customMetadata: {
-                        ...fileMetadata.customMetadata,
-                        score: parseFloat(score),
-                        analysis: fullAnalysisResult
+            setLoading(true); 
+            const fullAnalysisPromise = analyseBloodTest(text)
+                .then((fullAnalysisResult) => {
+                    setLoading(false);
+                    setAnalysisResult(fullAnalysisResult);
+        
+                    if (fullAnalysisResult) {
+                        const score = extractScoreFromAnalysis(fullAnalysisResult);
+                        setScores([...scores, { time: new Date().toLocaleDateString(), score }]);
+        
+                        getMetadata(fileRef).then((fileMetadata) => {
+                            updateMetadata(fileRef, {
+                                customMetadata: {
+                                    ...fileMetadata.customMetadata,
+                                    score: parseFloat(score),
+                                    analysis: fullAnalysisResult,
+                                },
+                            }).catch((error) => console.error("Error updating metadata:", error));
+                        });
+
+                        fetchUpdatedScores();
+                    } else {
+                        console.warn("Full analysis failed.");
                     }
+                })
+                .catch((error) => {
+                    console.error("Error in full analysis:", error);
+                    setLoading(false); 
                 });
-    
-                await fetchUpdatedScores();
-            } else {
-                console.warn("One or both analyses failed to complete");
-            }
+        
+            setSmartReportLoading(true);
+            const smartReportPromise = generateSmartReport(text)
+                .then((smartReportResult) => {
+                    setSmartReportLoading(false);
+                    setSmartReport(smartReportResult);
+        
+                    if (!smartReportResult) {
+                        console.warn("Smart report failed.");
+                    }
+
+                    saveSmartReportToStorage(smartReportResult, userId, selectedFileData.name);
+                })
+                .catch((error) => {
+                    console.error("Error in smart report:", error);
+                    setSmartReportLoading(false);
+                });
+        
+            await Promise.all([fullAnalysisPromise, smartReportPromise]);
         } catch (error) {
             toast.error(t('erroAnalise'));
             setAnalysisPerformed(false);
         } finally {
             setLoading(false);
+            setSmartReportLoading(false);
         }
     };
 
@@ -881,7 +926,7 @@ function Dashboard() {
                         className="bg-white mb-6 shadow-md rounded-md p-6"
                         >
                         {/* No Data message */}
-                        {!analysisPerformed && !loading && (
+                        {!analysisPerformed && !loading && !smartReportLoading && (
                             <div>
                             <h1 className="text-xl font-bold text-black mb-4">
                                 {t("yourAnalysisBy")}{" "}
@@ -894,7 +939,7 @@ function Dashboard() {
                         )}
 
                         {/* Analysis content */}
-                        {analysisPerformed && !loading && (
+                        {analysisPerformed && (
                             <>
                             <h1 className="text-xl font-bold text-black mb-4">
                                 {t("yourAnalysisBy")}{" "}
@@ -926,81 +971,97 @@ function Dashboard() {
                                 </button>
                             </div>
 
-                            {/* Tab Content */}
-                            {activeTab === "smartReport" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {smartReport && smartReport.parameters?.length > 0 ? (
-                                    smartReport.parameters.map((param, index) => (
-                                        <div
-                                    key={index}
-                                    className="bg-white p-4 shadow-sm rounded-lg border border-gray-200 flex flex-col relative text-sm"
-                                    >
-                                    {/* Status indicator */}
-                                    <div
-                                        className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
-                                        param.status === "high"
-                                            ? "bg-red-500"
-                                            : param.status === "low"
-                                            ? "bg-blue-500"
-                                            : "bg-green-500"
-                                        }`}
-                                    ></div>
-                                    
-                                    {/* Parameter Name */}
-                                    <h2 className="text-lg font-semibold text-black mb-1"> {/* Reduced font size */}
-                                        {param.name}
-                                    </h2>
-                                    
-                                    {/* Parameter Value and Range */}
-                                    <p className="text-sm"> {/* Reduced text size */}
-                                        <strong>Value:</strong>{" "}
-                                        <span className="font-semibold">{param.value}</span>
-                                    </p>
-                                    <p className="text-sm"> {/* Reduced text size */}
-                                        <strong>Range:</strong>{" "}
-                                        <span className="font-semibold">{param.range}</span>
-                                    </p>
-                                    
-                                    {/* Insights */}
-                                    <p className="mt-2 text-gray-600 text-sm"> {/* Reduced font size */}
-                                        {param.insight}
-                                    </p>
+                            {/* Full Analysis Tab */}
+                            {activeTab === "fullAnalysis" && (
+                                <div>
+                                {loading ? (
+                                    <div className="flex items-center justify-center">
+                                    <img
+                                        src={BloodFlowLogoNL}
+                                        alt="Logo"
+                                        className="w-44 animate-spin"
+                                    />
                                     </div>
-                                ))
                                 ) : (
-                                <p className="col-span-1 md:col-span-2 text-center text-gray-500 text-sm">
-                                    No smart report available. Please generate a smart report to see the results.
-                                </p>
+                                    <div className="typing-effect">
+                                    <ReactMarkdown
+                                        children={displayedText}
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                        strong: ({ children }) => (
+                                            <strong className="text-[#ce3d3d]">{children}</strong>
+                                        ),
+                                        p: ({ children }) => <p className="my-4">{children}</p>,
+                                        }}
+                                    />
+                                    </div>
                                 )}
-                            </div>
+                                </div>
                             )}
 
-                            {activeTab === "fullAnalysis" && (
-                                <div className="typing-effect">
-                                <ReactMarkdown
-                                    children={displayedText}
-                                    remarkPlugins={[remarkGfm]}
-                                    components={{
-                                    strong: ({ children }) => (
-                                        <strong className="text-[#ce3d3d]">{children}</strong>
-                                    ),
-                                    p: ({ children }) => <p className="my-4">{children}</p>,
-                                    }}
-                                />
+                            {/* Smart Report Tab */}
+                            {activeTab === "smartReport" && (
+                                <div>
+                                {smartReportLoading ? (
+                                    <div className="flex items-center justify-center">
+                                    <img
+                                        src={BloodFlowLogoNL}
+                                        alt="Logo"
+                                        className="w-44 animate-spin"
+                                    />
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {smartReport && smartReport.parameters?.length > 0 ? (
+                                        smartReport.parameters.map((param, index) => (
+                                        <div
+                                            key={index}
+                                            className="bg-white p-4 shadow-sm rounded-lg border border-gray-200 flex flex-col relative text-sm"
+                                        >
+                                            {/* Status indicator */}
+                                            <div
+                                            className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
+                                                param.status === "high"
+                                                ? "bg-red-500"
+                                                : param.status === "low"
+                                                ? "bg-red-500"
+                                                : param.status === "ND"
+                                                ? "bg-blue-500"
+                                                : "bg-green-500"
+                                            }`}
+                                            ></div>
+
+                                            {/* Parameter Name */}
+                                            <h2 className="text-lg font-semibold text-black mb-1">
+                                            {param.name}
+                                            </h2>
+
+                                            {/* Parameter Value and Range */}
+                                            <p className="text-sm">
+                                            <strong>Value:</strong>{" "}
+                                            <span className="font-semibold">{param.value}</span>
+                                            </p>
+                                            <p className="text-sm">
+                                            <strong>Range:</strong>{" "}
+                                            <span className="font-semibold">{param.range}</span>
+                                            </p>
+
+                                            {/* Insights */}
+                                            <p className="mt-2 text-gray-600 text-sm">
+                                            {param.insight}
+                                            </p>
+                                        </div>
+                                        ))
+                                    ) : (
+                                        <p className="col-span-1 md:col-span-2 text-center text-gray-500 text-sm">
+                                        No smart report available. Please generate a smart report to see the results.
+                                        </p>
+                                    )}
+                                    </div>
+                                )}
                                 </div>
                             )}
                             </>
-                        )}
-
-                        {/* Loading Animation */}
-                        {loading && (
-                            <div className="flex items-center justify-center">
-                            <img
-                                src={BloodFlowLogoNL}
-                                alt="Logo"
-                                className="w-44 animate-spin"
-                            />
-                            </div>
                         )}
                     </div>
 

@@ -812,7 +812,7 @@ async function generateSmartReport(text, languageDirective) {
                     {
                         "parameters": [
                             {
-                                "name": "Hemoglobin",
+                                "name": "Hemoglobina",
                                 "value": "15.4 g/L",
                                 "range": "13.0 g/L - 17.0 g/L",
                                 "status": "normal",
@@ -836,6 +836,7 @@ async function generateSmartReport(text, languageDirective) {
                     Status can be "normal", "low", "high", or "ND" (Not Detected).
                     
                     The insights should be concise and informative, providing a brief explanation of the significance of the value and its implications for health.
+                    If the status is "high" or "low", the insight should explain the potential health implications of the abnormal value in the entire context of the analysis.
             `,
         },
         {
@@ -869,13 +870,10 @@ async function generateSmartReport(text, languageDirective) {
         parsedResponse = JSON.parse(outputText);
     } catch (error) {
         console.error('Failed to parse JSON from the model:', error);
-        console.log('Output text:', outputText);
         return { parameters: null };
     }
 
     const parameters = parsedResponse.parameters || [];
-
-    console.log('Parsed data:', { parameters });
 
     return { parameters };
 }
