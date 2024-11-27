@@ -209,7 +209,7 @@ function Dashboard() {
     }, [t]);
 
     const saveSmartReportToStorage = async (smartReport, userId, fileName) => {
-        const smartReportRef = ref(storage, `bloodTestResults/${userId}/${fileName}_smartReport.json`);
+        const smartReportRef = ref(storage, `smartReportsJson/${userId}/${fileName}_smartReport.json`);
         
         const jsonData = JSON.stringify(smartReport);
         const blob = new Blob([jsonData], { type: "application/json" });
@@ -218,7 +218,7 @@ function Dashboard() {
     };
 
     const fetchSmartReport = async (userId, fileName) => {
-        const smartReportRef = ref(storage, `bloodTestResults/${userId}/${fileName}_smartReport.json`);
+        const smartReportRef = ref(storage, `smartReportsJson/${userId}/${fileName}_smartReport.json`);
         const downloadURL = await getDownloadURL(smartReportRef);
       
         const response = await fetch(downloadURL);
