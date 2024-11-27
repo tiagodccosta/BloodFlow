@@ -218,12 +218,28 @@ function Dashboard() {
     };
 
     const fetchSmartReport = async (userId, fileName) => {
-        const smartReportRef = ref(storage, `smartReportsJson/${userId}/${fileName}_smartReport.json`);
-        const downloadURL = await getDownloadURL(smartReportRef);
-      
-        const response = await fetch(downloadURL);
-        const smartReport = await response.json();
-        return smartReport;
+
+        try {
+            const smartReportRef = ref(storage, `smartReportsJson/${userId}/${fileName}_smartReport.json`);
+
+            try {
+                await getMetadata(smartReportRef);
+            } catch (error) {
+                if (error.code === 'storage/object-not-found') {
+                    console.warn('Smart Report file does not exist.');
+                    return;
+                }
+                throw error;
+            }
+
+            const downloadURL = await getDownloadURL(smartReportRef);
+            const response = await fetch(downloadURL);
+
+            const smartReport = await response.json();
+            return smartReport;
+        } catch (error) {
+            console.log('Failed to fetch Smart Report:');
+        }
     };
 
     const handleAnalyzeClick = async () => {
