@@ -677,8 +677,6 @@ async function extractParametersAndValuesFromBloodTest(text) {
     const testDate = parsedResponse.analysisDate || null;
     const parameters = parsedResponse.parameters || [];
 
-    console.log('Parsed data:', { parameters, testDate });
-
     return { parameters, testDate };
 }
 

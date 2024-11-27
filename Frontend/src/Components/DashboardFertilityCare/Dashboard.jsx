@@ -11,9 +11,11 @@ import DeletePatientPopup from './DeletePatientPopup';
 import NewFilePopup from '../Dashboard/NewFilePopup';
 import DeleteTestPopup from '../Dashboard/DeletePopup';
 import SpinnerButton from './SpinnerButton';
+import { AiOutlineClose, AiOutlineMenu } from 'react-icons/ai';
 
 const Dashboard = () => {
     const [loadingWindow, setLoadingWindow] = useState(true);
+    const [nav, setNav] = useState(false);
     const [patients, setPatients] = useState([]);
     const [filteredPatients, setFilteredPatients] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
@@ -315,17 +317,85 @@ const Dashboard = () => {
         }
     };
 
+    const handleSideBar = () => {
+        setNav(!nav);
+    }
+
     return (
         loadingWindow ? (
             <Spinner />
         ) : (
             <div className="flex h-screen">
                 {/* Sidebar */}
-                <div id="Sidebar" className="bg-white h-full md:w-1/5 sm:w-0 w-0 relative flex flex-col justify-between">
-                    <div className="flex flex-col justify-start items-start w-full">
+                <div id="Sidebar" className="bg-white hidden md:flex flex-col h-full md:w-1/5 sm:w-0 w-0 relative">
+                    <div className="justify-start items-start w-full">
                         <img className="w-40 mx-auto -mt-2" src={BloodFlowLogo} alt="BloodFlow Logo" />
                     </div>
 
+                    <div className="flex-grow p-2">
+                        {/* Search Input */}
+                        <input 
+                            type="text" 
+                            value={searchTerm} 
+                            onChange={handleSearchChange} 
+                            placeholder="Search for a patient..." 
+                            className="p-2 border rounded w-full mb-4 text-sm"
+                        />
+
+                        {/* Patient List */}
+                        <h3 className="font-bold text-gray-700 mb-2">Patients</h3>
+                        <ul className="patient-list overflow-y-auto" style={{ minHeight: '200px', maxHeight: '200px' }}>
+                            {filteredPatients.map((patient, index) => (
+                                <li 
+                                    key={index} 
+                                    onClick={() => handlePatientSelect(patient)} 
+                                    className={`cursor-pointer p-2 text-xs ${selectedPatient === patient ? 'bg-gray-300' : 'bg-white'}`}
+                                >
+                                    {patient.name}
+                                </li>
+                            ))}
+                        </ul>
+
+                        {/* Blood Tests List */}
+                            <h3 className="font-bold text-gray-700 mb-2">Blood Tests</h3>
+                            <ul className="blood-test-list overflow-y-auto" style={{ minHeight: '140px', maxHeight: '140px' }}>
+                                {patientTests && patientTests.length > 0 ? (
+                                    patientTests.slice().reverse().map((test, index) => (
+                                        <li 
+                                        key={index}
+                                        onClick={() => handleTestSelect(test)}
+                                        className={`p-2 text-xs cursor-pointer ${selectedPatientTest === test ? 'bg-gray-300' : 'bg-white'}`}>
+                                            {test.name} - {test.date}
+                                        </li>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-xs">No test data available.</p>
+                                )}
+                            </ul>
+                            <DeleteTestPopup 
+                                show={showDeleteTestModal}
+                                onClose={() => setShowDeleteTestModal(false)}
+                                onConfirm={confirmDeleteTest}
+                            />
+                    </div>
+    
+                    {/* Buttons at the bottom */}
+                    <div className="absolute bottom-0 left-0 w-full py-4 px-4">
+                        <button 
+                            onClick={handleAddPatientClick} 
+                            className="bg-[#ff0000] text-white font-bold text-sm w-full py-3 rounded-md my-2"
+                        >
+                            Add New Patient
+                        </button>
+    
+                        <button className="bg-black w-full rounded-md font-bold py-3 text-white" onClick={handleLogout}>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+
+                <div className={`${nav ? 'fixed' : 'hidden'} left-0 top-0 w-3/5 h-full bg-white flex flex-col ease-in-out duration-500 z-40`}>
+                    <img className="w-40 mx-auto -mt-2" src={BloodFlowLogo} alt="BloodFlow Logo" />
                     <div className="flex-grow p-2">
                         {/* Search Input */}
                         <input 
@@ -392,10 +462,13 @@ const Dashboard = () => {
                 <div className="main-container bg-gray-300 flex-grow overflow-y-auto pt-6 px-4 md:w-4/5 flex flex-col">
                     
                     {/* Title Container */}
-                    <div className="bg-white w-full mb-6 shadow-md rounded-md px-6 py-4">
-                        <h1 className="font-bold text-lg md:text-2xl text-[#ce3d3d]">
+                    <div className="bg-white w-full mb-6 shadow-md rounded-md flex justify-between items-center font-bold text-lg md:text-2xl text-[#ce3d3d] p-6">
+                        <h1>
                             FertilityCare Dashboard
                         </h1>
+                        <div className="md:hidden" onClick={handleSideBar}>
+                            {nav ? <AiOutlineClose size={20} /> : <AiOutlineMenu size={20} />}
+                        </div>
                     </div>
 
                     {/* Patient Information Container */}
@@ -424,7 +497,7 @@ const Dashboard = () => {
                                 </div>
 
                                 {/* Right Container: Actions */}
-                                <div className="w-full md:w-1/3 p-2 md:p-6 md:pl-4 flex flex-col items-center justify-center">
+                                <div className="w-full md:w-1/3 p-2 md:p-6 md:pl-4 flex flex-col items-center justify-center mt-8 mb-4">
                                     <p className="font-bold text-black text-lg md:text-xl mb-2 md:mb-4 text-center -mt-6">Upload Patient Blood Test</p>
                                     <button 
                                         onClick={() => handleNewFileClick()} 
