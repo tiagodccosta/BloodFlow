@@ -291,6 +291,7 @@ const Dashboard = () => {
                 downloadLink.href = result.url;
                 downloadLink.download = excelFileName;
                 downloadLink.click();
+                fetchPatientExcelFile(patientId);
             }
         } catch (error) {
             console.error("Backend request error:", error);
