@@ -469,7 +469,7 @@ function Dashboard() {
         try {
             const language = getLanguageFromDomain();
     
-            const response = await fetch(`http://localhost:4000/generate-smart-report`, {
+            const response = await fetch(`${BASE_URL}/generate-smart-report`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
