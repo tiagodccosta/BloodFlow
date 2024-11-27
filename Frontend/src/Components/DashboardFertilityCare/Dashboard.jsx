@@ -176,6 +176,7 @@ const Dashboard = () => {
 
             setPatientTests([]);
             fetchPatientTests(patientId);
+            setSelectedPatientTest(patientTests[patientTests.length - 1]);
         } catch (error) {
             console.error("Error uploading file:", error);
         }
