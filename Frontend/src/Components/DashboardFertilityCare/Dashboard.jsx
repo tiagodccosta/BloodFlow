@@ -279,7 +279,7 @@ const Dashboard = () => {
     const generateExcelFileBackend = async (patientId, fileURLs, excelFileName) => {
 
         try {
-            const response = await fetch(`http://localhost:4000/fertility-care/generate-excel`, {
+            const response = await fetch(`${BASE_URL}/fertility-care/generate-excel`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
