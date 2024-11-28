@@ -19,8 +19,9 @@ const Dashboard = () => {
     const [patients, setPatients] = useState([]);
     const [filteredPatients, setFilteredPatients] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
-    const [selectedPatientTest, setSelectedPatientTest] = useState(null);
+    const [selectedPatientTest, setSelectedPatientTest] = useState([]);
     const [patientTests, setPatientTests] = useState([]);
+    const [selectedTests, setSelectedTests] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -231,9 +232,16 @@ const Dashboard = () => {
         setShowDeleteModal(true);
     }
 
-    const handleBloodTestSelection = (testName) => {
-        const selectedTest = patientTests.find((test) => test.name === testName);
-        setSelectedPatientTest(selectedTest);
+    const handleCheckboxChange = (test) => {
+        setSelectedTests((prevSelectedTests) => {
+            const isTestSelected = prevSelectedTests.includes(test.url);
+            
+            if (isTestSelected) {
+                return prevSelectedTests.filter(url => url !== test.url);
+            } else {
+                return [...prevSelectedTests, test.url];
+            }
+        });
     };
 
     const confirmDeletePatient = async (patientId) => {
@@ -268,17 +276,17 @@ const Dashboard = () => {
         }
     };
 
-    const generateExcelFileBackend = async (patientId, fileURL, excelFileName) => {
+    const generateExcelFileBackend = async (patientId, fileURLs, excelFileName) => {
 
         try {
-            const response = await fetch(`${BASE_URL}/fertility-care/generate-excel`, {
+            const response = await fetch(`http://localhost:4000/fertility-care/generate-excel`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     patientId,
-                    fileURL,
+                    fileURLs,
                     excelFileName
                 })
             });
@@ -301,24 +309,25 @@ const Dashboard = () => {
     };
 
     const handleGenerateExcelFile = async () => {
-        if (!selectedPatientTest || !excelFileName) {
-            alert("Please select a blood test and provide a name for the Excel file.");
+        if (!selectedPatient || selectedTests.length === 0 || !excelFileName) {
+            alert("Please select at least one blood test and provide a name for the Excel file.");
             return;
         }
-
+    
         setGeneratingExcelFile(true);
-
+    
         try {
-            await generateExcelFileBackend(selectedPatient.id, selectedPatientTest.url, excelFileName);
+            
+            await generateExcelFileBackend(selectedPatient.id, selectedTests, excelFileName);
             toast.success("Excel file generated successfully.");
-            setGeneratingExcelFile(false);
         } catch (error) {
-            setGeneratingExcelFile(false);
             console.error("Error generating Excel file:", error);
             toast.error("Failed to generate Excel file.");
+        } finally {
+            setGeneratingExcelFile(false);
         }
     };
-
+    
     const handleSideBar = () => {
         setNav(!nav);
     }
@@ -543,20 +552,29 @@ const Dashboard = () => {
                     <div className="bg-white shadow-md rounded-md px-10 py-8 mt-4 mb-8">
                         <h2 className="text-lg font-bold text-gray-800 mb-4">Generate Excel File</h2>
                         
-                        {/* Blood Test Selection Dropdown */}
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Blood Test:</label>
-                        <select 
-                            value={selectedPatientTest ? selectedPatientTest.name : ''} 
-                            onChange={(e) => handleBloodTestSelection(e.target.value)} 
-                            className="border border-gray-300 rounded-md p-2 w-full mb-4"
-                        >
-                            <option value="" disabled>Select a test</option>
-                            {patientTests.slice().reverse().map((test) => (
-                                <option key={test.name} value={test.name}>
-                                    {test.name} - {test.date}
-                                </option>
-                            ))}
-                        </select>
+                        {/* Blood Test Selection with Checkboxes */}
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Blood Tests:</label>
+                        <div className="space-y-2 mb-6">
+                            {patientTests && patientTests.length > 0 ? (
+                                patientTests.slice().reverse().map((test) => (
+                                    <div key={test.url} className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id={test.url}
+                                            value={test.url}
+                                            checked={selectedTests.includes(test.url)}
+                                            onChange={() => handleCheckboxChange(test)}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor={test.url} className="text-sm text-gray-700">
+                                            {test.name} - {test.date}
+                                        </label>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-gray-500">No blood tests available</div>
+                            )}
+                        </div>
 
                         {/* Excel File Name Input */}
                         <label className="block text-sm font-medium text-gray-700 mb-2">Excel File Name:</label>
@@ -573,7 +591,7 @@ const Dashboard = () => {
                             <SpinnerButton 
                                 onClick={handleGenerateExcelFile} 
                                 isLoading={generatingExcelFile}
-                                >
+                            >
                                 {generatingExcelFile ? 'Generating...' : 'Generate Excel File'}
                             </SpinnerButton>
                         </div>  

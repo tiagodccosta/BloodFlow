@@ -772,21 +772,39 @@ async function saveWorkbookToStorage(workbook, patientId, fileName) {
 }
 
 app.post('/fertility-care/generate-excel', async (req, res) => {
-    const { patientId, fileURL, excelFileName } = req.body;
+    const { patientId, fileURLs, excelFileName } = req.body;
+
+    if (!Array.isArray(fileURLs) || fileURLs.length === 0) {
+        return res.status(400).send({ error: "fileURLs must be a non-empty array." });
+    }
 
     try {
-        const pdfResponse = await axios.get(fileURL, { responseType: 'arraybuffer' });
-        const pdfText = await pdfParser(pdfResponse.data);
+        let allParameters = [];
+        let earliestTestDate = null;
 
-        const { parameters, testDate } = await extractParametersAndValuesFromBloodTest(pdfText.text);
+        for (const fileURL of fileURLs) {
+            const pdfResponse = await axios.get(fileURL, { responseType: 'arraybuffer' });
+            const pdfText = await pdfParser(pdfResponse.data);
 
-        if (!testDate) {
-            throw new Error("Test date could not be extracted from the blood test.");
+            const { parameters, testDate } = await extractParametersAndValuesFromBloodTest(pdfText.text);
+
+            if (!testDate) {
+                throw new Error("Test date could not be extracted from one of the blood tests.");
+            }
+
+            const parsedDate = new Date(testDate.split('/').reverse().join('-'));
+            if (!earliestTestDate || parsedDate < earliestTestDate) {
+                earliestTestDate = parsedDate;
+            }
+
+            allParameters.push({ parameters, testDate });
         }
 
         let workbook = await downloadExcelFile(patientId, excelFileName);
 
-        workbook = await updateOrCreateExcelFile(workbook, parameters, testDate);
+        for (const { parameters, testDate } of allParameters) {
+            workbook = await updateOrCreateExcelFile(workbook, parameters, testDate);
+        }
 
         const signedUrl = await saveWorkbookToStorage(workbook, patientId, excelFileName);
 
@@ -796,6 +814,7 @@ app.post('/fertility-care/generate-excel', async (req, res) => {
         res.status(500).send({ error: "Failed to generate Excel file." });
     }
 });
+
 
 async function generateSmartReport(text, languageDirective) {
     const url = "https://api.openai.com/v1/chat/completions";

@@ -302,7 +302,6 @@ function Dashboard() {
                                 },
                             }).catch((error) => console.error("Error updating metadata:", error));
                         });
-
                         fetchUpdatedScores();
                     } else {
                         console.warn("Full analysis failed.");
