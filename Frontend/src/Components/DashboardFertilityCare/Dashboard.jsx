@@ -147,39 +147,42 @@ const Dashboard = () => {
         }
       };
 
-      const handleNewFileClick = () => {
+    const handleNewFileClick = () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.pdf';
+        input.multiple = true;
         input.onchange = handleFileChange;
         input.click();
     };
 
     const handleFileChange = (event) => {
-        setSelectedPatientTest(event.target.files[0]);
-        setShowNewFileModal(true);
+        const files = Array.from(event.target.files); 
+        setSelectedPatientTest((prevFiles) => [...prevFiles, ...files]); 
+        setShowNewFileModal(true); 
     };
 
 
     const uploadBloodTest = async (patientId) => {
-
         try {
-
-            if(!selectedPatientTest) {
+            if (selectedPatientTest.length === 0) {
+                toast.error("No files selected.");
                 return;
             }
-
-            const fileRef = ref(storage, `FertilityCare/${patientId}/${selectedPatientTest.name}`);
-            await uploadBytes(fileRef, selectedPatientTest);
+    
+            for (const file of selectedPatientTest) {
+                const fileRef = ref(storage, `FertilityCare/${patientId}/${file.name}`);
+                await uploadBytes(fileRef, file);
+            }
+    
             setShowNewFileModal(false);
-            toast.success("Blood Test file uploaded successfully.");
-            console.log("Blood Test file uploaded successfully.");
-
+            toast.success("Blood test files uploaded successfully.");
+    
+            setSelectedPatientTest([]);
             setPatientTests([]);
             fetchPatientTests(patientId);
-            setSelectedPatientTest(patientTests[patientTests.length - 1]);
         } catch (error) {
-            console.error("Error uploading file:", error);
+            console.error("Error uploading files:", error);
         }
     };
 
@@ -458,12 +461,12 @@ const Dashboard = () => {
                     <div className="absolute bottom-0 left-0 w-full py-4 px-4">
                         <button 
                             onClick={handleAddPatientClick} 
-                            className="bg-[#ff0000] text-white font-bold text-sm w-full py-3 rounded-md my-2"
+                            className="bg-[#ff0000] text-white font-bold text-sm w-max py-3 rounded-md my-2"
                         >
                             Add New Patient
                         </button>
     
-                        <button className="bg-black w-full rounded-md font-bold py-3 text-white" onClick={handleLogout}>
+                        <button className="bg-black w-full text-sm rounded-md font-bold py-3 text-white" onClick={handleLogout}>
                             Logout
                         </button>
                     </div>

@@ -479,7 +479,7 @@ app.post('/analyze-blood-test', async (req, res) => {
     try {
         const languageDirective = language === 'en'
             ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo."
-            : "Por favor, responde ao paciente em Português.";
+            : "Por favor, responde ao paciente em Português de Portugal.";
 
         const analysis = await analyzeTextWithOpenAI(text, languageDirective, userName, age, medicalCondition);
 
@@ -902,7 +902,7 @@ app.post('/generate-smart-report', async (req, res) => {
 
         const languageDirective = language === 'en'
             ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo."
-            : "Por favor, responde ao paciente em Português.";
+            : "Por favor, responde ao paciente em Português de Portugal.";
 
         const analysisSmartReport = await generateSmartReport(text, languageDirective);
 
