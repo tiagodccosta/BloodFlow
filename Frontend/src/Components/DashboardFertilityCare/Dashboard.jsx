@@ -357,7 +357,7 @@ const Dashboard = () => {
                         />
 
                         {/* Patient List */}
-                        <h3 className="font-bold text-gray-700 mb-2">Patients</h3>
+                        <h3 className="font-bold text-gray-700 -mb-2">Patients</h3>
                         <ul className="patient-list overflow-y-auto" style={{ minHeight: '200px', maxHeight: '200px' }}>
                             {filteredPatients.map((patient, index) => (
                                 <li 
@@ -461,7 +461,7 @@ const Dashboard = () => {
                     <div className="absolute bottom-0 left-0 w-full py-4 px-4">
                         <button 
                             onClick={handleAddPatientClick} 
-                            className="bg-[#ff0000] text-white font-bold text-sm w-max py-3 rounded-md my-2"
+                            className="bg-[#ff0000] text-white w-full font-bold text-sm py-3 rounded-md my-2"
                         >
                             Add New Patient
                         </button>
