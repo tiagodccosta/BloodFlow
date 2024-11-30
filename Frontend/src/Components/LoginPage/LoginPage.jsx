@@ -61,6 +61,8 @@ function LoginPage() {
           if (userData.role === 'fertilitycare') {
             console.log(userData.role);
             navigate('/fertility-care-dashboard', { state: { user: userData } });
+          } else if (userData.role === 'followup') {
+            navigate('/follow-up-form-fertilitycare', { state: { user: userData } });
           } else {
             navigate('/dashboard', { state: { user: userData } });
           }

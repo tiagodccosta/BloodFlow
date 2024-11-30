@@ -10,6 +10,7 @@ import LoginPage from './Components/LoginPage/LoginPage';
 import Dashboard from './Components/Dashboard/Dashboard';
 import FertilityCareDashboard from './Components/DashboardFertilityCare/Dashboard';
 import ForgotPassword from './Components/LoginPage/ForgotPassword';
+import FollowUpDashboard from './Components/DashboardFollowUp/Dashboard';
 import usePageTracking from './PageTracking';
 
 const HomePage = () => (
@@ -32,6 +33,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/fertility-care-dashboard" element={<FertilityCareDashboard />} />
       <Route path="/forgotpassword" element={<ForgotPassword />} />
+      <Route path="/follow-up-form-fertilitycare" element={<FollowUpDashboard />} />
     </Routes>
   );
 }

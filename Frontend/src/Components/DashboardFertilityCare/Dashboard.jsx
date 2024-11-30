@@ -357,7 +357,7 @@ const Dashboard = () => {
                         />
 
                         {/* Patient List */}
-                        <h3 className="font-bold text-gray-700 -mb-2">Patients</h3>
+                        <h3 className="font-bold text-gray-700">Patients</h3>
                         <ul className="patient-list overflow-y-auto" style={{ minHeight: '200px', maxHeight: '200px' }}>
                             {filteredPatients.map((patient, index) => (
                                 <li 
@@ -421,7 +421,7 @@ const Dashboard = () => {
                         />
 
                         {/* Patient List */}
-                        <h3 className="font-bold text-gray-700 mb-2">Patients</h3>
+                        <h3 className="font-bold text-gray-700">Patients</h3>
                         <ul className="patient-list overflow-y-auto" style={{ minHeight: '200px', maxHeight: '200px' }}>
                             {filteredPatients.map((patient, index) => (
                                 <li 
