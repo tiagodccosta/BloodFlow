@@ -21,7 +21,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showForm, setShowForm] = useState(false);
-    const [consultationNumber, setConsultationNumber] = useState(null);
+    const [consultationNumber, setConsultationNumber] = useState(0);
 
     const fetchPatients = async () => {
         try {
@@ -76,7 +76,20 @@ const Dashboard = () => {
         }
     };
 
+    const resetFormState = () => {
+        setShowForm(false);
+        setConsultationNumber(0);
+    };
+
     const handlePatientSelect = async (patient) => {
+        if (showForm) {
+            const confirmSwitch = window.confirm(
+                "A form is currently open for another patient. Switching patients will discard the current form. Do you want to continue?"
+            );
+            if (!confirmSwitch) return;
+        }
+    
+        resetFormState();
         setSelectedPatient(patient);
     };
 
@@ -103,23 +116,29 @@ const Dashboard = () => {
 
     const handleNewFormClick = () => {
         if (!selectedPatient) {
-            alert('Please select a patient first.');
+            toast.error('Please select a patient first.');
             return;
         }
-
+    
         const consultNumber = prompt('Enter consultation number (1-8):');
-        if (consultNumber && !isNaN(consultNumber) && consultNumber >= 1 && consultNumber <= 8) {
-            setConsultationNumber(Number(consultNumber));
-            setShowForm(true);
-        } else {
-            alert('Please enter a valid consultation number between 1 and 8.');
+        const parsedConsultNumber = parseInt(consultNumber, 10);
+    
+        if (!consultNumber || isNaN(parsedConsultNumber) || parsedConsultNumber < 1 || parsedConsultNumber > 8) {
+            toast.error('Please enter a valid consultation number between 1 and 8.');
+            return;
         }
+    
+        setConsultationNumber(parsedConsultNumber);
+        setShowForm(true);
     };
 
     const handleLogout = async () => {
         try {
             const auth = getAuth();
             await auth.signOut();
+            setSelectedPatient(null);
+            setShowForm(false);
+            setConsultationNumber(0);
             toast.success("You have been logged out.");
             navigate('/');
         } catch (error) {
@@ -167,18 +186,24 @@ const Dashboard = () => {
                         />
 
                         {/* Patient List */}
-                        <h3 className="font-bold text-gray-700">Patients</h3>
-                        <ul className="patient-list overflow-y-auto" style={{ minHeight: '350px', maxHeight: '350px' }}>
-                            {filteredPatients.map((patient, index) => (
-                                <li 
-                                    key={index} 
-                                    onClick={() => handlePatientSelect(patient)} 
-                                    className={`cursor-pointer p-2 text-xs ${selectedPatient === patient ? 'bg-gray-300' : 'bg-white'}`}
-                                >
-                                    {patient.name}
-                                </li>
-                            ))}
-                        </ul>
+                        <div className="flex-grow p-2">
+                            <h3 className="font-bold text-gray-700">Patients</h3>
+                            {patients.length === 0 ? (
+                                <p className="text-sm text-gray-500">No patients available. Add a new patient to get started.</p>
+                            ) : (
+                                <ul className="patient-list overflow-y-auto" style={{ minHeight: '350px', maxHeight: '350px' }}>
+                                    {filteredPatients.map((patient, index) => (
+                                        <li 
+                                            key={index} 
+                                            onClick={() => handlePatientSelect(patient)} 
+                                            className={`cursor-pointer p-2 text-xs ${selectedPatient === patient ? 'bg-gray-300' : 'bg-white'}`}
+                                        >
+                                            {patient.name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     </div>
     
                     {/* Buttons at the bottom */}
@@ -209,18 +234,24 @@ const Dashboard = () => {
                         />
 
                         {/* Patient List */}
-                        <h3 className="font-bold text-gray-700 mb-2">Patients</h3>
-                        <ul className="patient-list overflow-y-auto" style={{ minHeight: '350px', maxHeight: '350px' }}>
-                            {filteredPatients.map((patient, index) => (
-                                <li 
-                                    key={index} 
-                                    onClick={() => handlePatientSelect(patient)} 
-                                    className={`cursor-pointer p-2 text-xs ${selectedPatient === patient ? 'bg-gray-300' : 'bg-white'}`}
-                                >
-                                    {patient.name}
-                                </li>
-                            ))}
-                        </ul>                
+                        <div className="flex-grow p-2">
+                            <h3 className="font-bold text-gray-700">Patients</h3>
+                            {patients.length === 0 ? (
+                                <p className="text-sm text-gray-500">No patients available. Add a new patient to get started.</p>
+                            ) : (
+                                <ul className="patient-list overflow-y-auto" style={{ minHeight: '350px', maxHeight: '350px' }}>
+                                    {filteredPatients.map((patient, index) => (
+                                        <li 
+                                            key={index} 
+                                            onClick={() => handlePatientSelect(patient)} 
+                                            className={`cursor-pointer p-2 text-xs ${selectedPatient === patient ? 'bg-gray-300' : 'bg-white'}`}
+                                        >
+                                            {patient.name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>              
                     </div>
     
                     {/* Buttons at the bottom */}
@@ -309,6 +340,7 @@ const Dashboard = () => {
                                 <MultiStepForm
                                     patientId={selectedPatient.id}
                                     consultationNumber={consultationNumber}
+                                    onFormComplete={() => resetFormState()}
                                 />
                             </div>
                         ) : (

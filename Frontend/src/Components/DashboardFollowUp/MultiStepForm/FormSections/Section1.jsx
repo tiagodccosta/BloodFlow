@@ -1,28 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Section1 = ({ data, onNext, onPrevious, onSave, isLastStep }) => {
-  const [inputs, setInputs] = useState({
-    formNumber: data.formNumber || '',
-    id: data.id || '',
-    womanName: data.womanName || '',
-    manName: data.manName || '',
-    address: data.address || '',
-    city: data.city || '',
-    state: data.state || '',
-    zip: data.zip || '',
-    womanTelephone: data.womanTelephone || '',
-    manTelephone: data.manTelephone || '',
-    womanEmail: data.womanEmail || '',
-    lengthOfMarriage: data.lengthOfMarriage || '',
-    womanMaritalStatus: data.womanMaritalStatus || '',
-    manMaritalStatus: data.manMaritalStatus || '',
-    womanAge: data.womanAge || '',
-    manAge: data.manAge || '',
-    numOfMarriages: {
-      woman: data.numOfMarriages?.woman || '',
-      man: data.numOfMarriages?.man || ''
-    },
-  });
+    const [inputs, setInputs] = useState({
+        formNumber: '',
+        id: '',
+        womanName: '',
+        manName: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        womanTelephone: '',
+        manTelephone: '',
+        womanEmail: '',
+        lengthOfMarriage: '',
+        womanMaritalStatus: '',
+        manMaritalStatus: '',
+        womanAge: '',
+        manAge: '',
+        numOfMarriages: {
+            woman: '',
+            man: '',
+        },
+    });
+
+    useEffect(() => {
+        setInputs((prev) => ({
+            ...prev,
+            ...data,
+            numOfMarriages: {
+                ...prev.numOfMarriages,
+                ...data?.numOfMarriages,
+            },
+        }));
+    }, [data]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;

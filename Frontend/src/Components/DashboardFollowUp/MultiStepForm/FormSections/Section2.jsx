@@ -1,21 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Section2 = ({ data, onNext, onPrevious, onSave, isLastStep }) => {
-  const [inputs, setInputs] = useState({
-    numOfPregnancies: data.numOfPregnancies || '',
-    numOfLiveBirths: data.numOfLiveBirths || '',
-    numOfChildrenNowLiving: data.numOfChildrenNowLiving || '',
-    dateOfLastPAP: data.dateOfLastPAP || '',
-    papRecommended: data.papRecommended || '',
-    shortestToLongestMenstrualCycle: {
-      shortest: data.shortestToLongestMenstrualCycle?.shortest || '',
-      longest: data.shortestToLongestMenstrualCycle?.longest || '',
-    },
-    mostRecentMethodOfFamilyPlanning: data.mostRecentMethodOfFamilyPlanning || '',
-    reproductiveCategoryAt1stFup: data.reproductiveCategoryAt1stFup || '',
-    changeInReproductiveCategory: data.changeInReproductiveCategory || '',
-    namesAndAgesOfChildren: data.namesAndAgesOfChildren || '',
-  });
+    const [inputs, setInputs] = useState({
+        numOfPregnancies: '',
+        numOfLiveBirths: '',
+        numOfChildrenNowLiving: '',
+        dateOfLastPAP: '',
+        papRecommended: '',
+        shortestToLongestMenstrualCycle: {
+            shortest: '',
+            longest: '',
+        },
+        mostRecentMethodOfFamilyPlanning: '',
+        reproductiveCategoryAt1stFup: '',
+        changeInReproductiveCategory: '',
+        namesAndAgesOfChildren: '',
+    });
+
+    useEffect(() => {
+        setInputs((prev) => ({
+            ...prev,
+            ...data,
+            shortestToLongestMenstrualCycle: {
+                ...prev.shortestToLongestMenstrualCycle,
+                ...data?.shortestToLongestMenstrualCycle,
+            },
+        }));
+    }, [data]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,6 +48,10 @@ const Section2 = ({ data, onNext, onPrevious, onSave, isLastStep }) => {
   const handleNext = () => {
     onNext(inputs);
   };
+
+  const handleSave = () => {
+    onSave(inputs);
+  }
 
   return (
     <div>
@@ -205,7 +220,7 @@ const Section2 = ({ data, onNext, onPrevious, onSave, isLastStep }) => {
           </button>
         ) : (
           <button
-            onClick={onSave}
+            onClick={handleSave}
             className="px-4 py-2 bg-red-600 text-white rounded"
           >
             Save
