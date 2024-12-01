@@ -25,7 +25,6 @@ const MultiStepForm = ({ patientId, consultationNumber, onFormComplete }) => {
 
                 setFormData(data);
             } catch (error) {
-                // If no existing data, keep form data empty
                 console.log('No existing form data', error);
                 setFormData({});
             }
@@ -50,7 +49,6 @@ const MultiStepForm = ({ patientId, consultationNumber, onFormComplete }) => {
             
             toast.success(`Consultation ${consultationNumber} form saved successfully!`);
             
-            // Notify parent component that form is complete
             if (onFormComplete) {
                 onFormComplete();
             }
@@ -78,9 +76,7 @@ const MultiStepForm = ({ patientId, consultationNumber, onFormComplete }) => {
         setCurrentStep((prev) => prev - 1);
     };
 
-    // Render logic
     const renderContent = () => {
-        // Render form sections
         const CurrentSection = sections[currentStep];
         return (
             <>
