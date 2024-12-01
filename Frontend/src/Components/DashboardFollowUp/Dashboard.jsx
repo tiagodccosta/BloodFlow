@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { getAuth } from 'firebase/auth';
 import DeletePatientPopup from '../DashboardFertilityCare/DeletePatientPopup';
 import { AiOutlineClose, AiOutlineMenu } from 'react-icons/ai';
+import MultiStepForm from './MultiStepForm/MultiStepForm';
 
 const Dashboard = () => {
     const [loadingWindow, setLoadingWindow] = useState(true);
@@ -19,7 +20,8 @@ const Dashboard = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+    const [showForm, setShowForm] = useState(false);
+    const [consultationNumber, setConsultationNumber] = useState(null);
 
     const fetchPatients = async () => {
         try {
@@ -97,6 +99,21 @@ const Dashboard = () => {
 
     const handleDeleteClick = () => {
         setShowDeleteModal(true);
+    };
+
+    const handleNewFormClick = () => {
+        if (!selectedPatient) {
+            alert('Please select a patient first.');
+            return;
+        }
+
+        const consultNumber = prompt('Enter consultation number (1-8):');
+        if (consultNumber && !isNaN(consultNumber) && consultNumber >= 1 && consultNumber <= 8) {
+            setConsultationNumber(Number(consultNumber));
+            setShowForm(true);
+        } else {
+            alert('Please enter a valid consultation number between 1 and 8.');
+        }
     };
 
     const handleLogout = async () => {
@@ -253,7 +270,7 @@ const Dashboard = () => {
                                 <div className="w-full md:w-1/3 p-2 md:p-6 md:pl-4 flex flex-col items-center justify-center mt-4 mb-4">
                                     <p className="font-bold text-black text-lg md:text-xl mb-2 md:mb-4 text-center -mt-6">Start New Consultation Follow Up Form</p>
                                     <button 
-                                        
+                                        onClick={handleNewFormClick}
                                         className="bg-[#ff0000] w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white"
                                     >
                                         New Form
@@ -284,7 +301,19 @@ const Dashboard = () => {
                     </div>
 
                     <div className="bg-white shadow-md rounded-md px-10 py-8 mt-4 mb-8">
-                        <h2 className="text-lg font-bold text-gray-800 mb-4">Form View Container</h2>
+                        {showForm && selectedPatient && consultationNumber ? (
+                            <div>
+                                <h1 className="text-xl font-bold text-black mb-4">
+                                    Consultation {consultationNumber} Follow-Up Form
+                                </h1>
+                                <MultiStepForm
+                                    patientId={selectedPatient.id}
+                                    consultationNumber={consultationNumber}
+                                />
+                            </div>
+                        ) : (
+                            <p>Select a patient and click "New Form" to start the consultation form.</p>
+                        )}
                     </div>
                 </div>
             </div>
