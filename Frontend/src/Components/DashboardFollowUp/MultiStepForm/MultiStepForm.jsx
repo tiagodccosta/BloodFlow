@@ -42,7 +42,7 @@ const MultiStepForm = ({ patientId, consultationNumber, onFormComplete }) => {
                 consultationNumber: consultationNumber
             };
 
-            const filePath = `FertilityCareFollowUp/${patientId}/consultation${consultationNumber}.json`;
+            const filePath = `FertilityCareFollowUp/${patientId}/consult.json`;
             const fileRef = ref(storage, filePath);
 
             await uploadString(fileRef, JSON.stringify(updatedFormData));
