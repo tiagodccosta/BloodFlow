@@ -55,7 +55,7 @@ const Section2 = ({ data, onNext, onPrevious, onSave, isLastStep }) => {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Woman's Reproductive History</h2>
+      <h2 className="text-xl font-bold mb-4 mt-4">Woman's Reproductive History</h2>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-gray-700"># of Pregnancies</label>

@@ -5,11 +5,12 @@ import { toast } from 'react-toastify';
 import ProgressBar from './ProgressBar';
 import Section1 from './FormSections/Section1';
 import Section2 from './FormSections/Section2';
+import Section3 from './FormSections/Section3';
 
 const MultiStepForm = ({ patientId, consultationNumber, onFormComplete }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState({});
-    const sections = [Section1, Section2];
+    const sections = [Section1, Section2, Section3];
 
     useEffect(() => {
         const fetchExistingFormData = async () => {
