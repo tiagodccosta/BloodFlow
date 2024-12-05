@@ -539,7 +539,7 @@ function Dashboard() {
         const medicalCondition = userData.medicalCondition;
 
         try {
-            const response = await axios.post(`http://localhost:4000/analyze-blood-test-screening`, {
+            const response = await axios.post(`${BASE_URL}/analyze-blood-test-screening`, {
                 text,
                 userName,
                 age,
