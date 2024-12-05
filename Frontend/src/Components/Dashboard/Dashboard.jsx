@@ -38,7 +38,8 @@ function Dashboard() {
     const [scores, setScores] = useState([]);
     const [analysisPerformed, setAnalysisPerformed] = useState(false);
     const [displayedText, setDisplayedText] = useState("");
-    const [index, setIndex] = useState(0);
+    const [analysisIndex, setAnalysisIndex] = useState(0);
+    const [screeningIndex, setScreeningIndex] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [showNewFileModal, setShowNewFileModal] = useState(false);
     const [showEditPopup, setShowEditPopup] = useState(false);
@@ -46,6 +47,10 @@ function Dashboard() {
     const analysisContainerRef = useRef(null);
     const [smartReport, setSmartReport] = useState(null);
     const [smartReportLoading, setSmartReportLoading] = useState(false);
+    const [analysisScreeningLoading, setAnalysisScreeningLoading] = useState(false);
+    const [screeningAnalysis, setScreeningAnalysis] = useState("");
+    const [screeningPerformed, setScreeningPerformed] = useState(false);
+    const [screeningResult, setScreeningResult] = useState("");
     const [activeTab, setActiveTab] = useState("fullAnalysis");
 
     const { t } = useTranslation();
@@ -194,6 +199,14 @@ function Dashboard() {
             } else {
                 setAnalysisPerformed(false);
             }
+
+            if (metadata.customMetadata?.screening !== undefined) {
+                setScreeningAnalysis(metadata.customMetadata.screening);
+                setScreeningPerformed(true);
+            } else {
+                setScreeningPerformed(false);
+                setScreeningAnalysis("");
+            }
     
             try {
                 const smartReport = await fetchSmartReport(userId, fileName);
@@ -261,6 +274,16 @@ function Dashboard() {
                     }, 800);
                     return;
                 }
+
+                if(metadata.customMetadata?.screening !== undefined) {
+                    setScreeningAnalysis(metadata.customMetadata.screening);
+                    setAnalysisScreeningLoading(true);
+                    setTimeout(() => {
+                        setScreeningPerformed(true);
+                        analysisContainerRef.current.scrollIntoView({ behavior: 'smooth' });
+                    }, 800);
+                    return;
+                }
             } catch (error) {
                 console.error('Error fetching file metadata:', error);
             }
@@ -268,11 +291,14 @@ function Dashboard() {
             console.error('Error fetching file metadata:', error);
         } finally {
             setLoading(false);
+            setAnalysisScreeningLoading(false);
         }
 
         setLoading(true);
+        setAnalysisScreeningLoading(true);
         setTimeout(() => {
             setAnalysisPerformed(true);
+            setScreeningPerformed(true);
             analysisContainerRef.current.scrollIntoView({ behavior: 'smooth' });
         }, 1200);
 
@@ -311,6 +337,30 @@ function Dashboard() {
                     console.error("Error in full analysis:", error);
                     setLoading(false); 
                 });
+
+                setAnalysisScreeningLoading(true); 
+                const screeningAnalysisPromise = analyseBloodTestForScreening(text)
+                    .then((screeningAnalysisPromise) => {
+                        setAnalysisScreeningLoading(false);
+                        setScreeningResult(screeningAnalysisPromise);
+            
+                        if (screeningAnalysisPromise) {
+                            getMetadata(fileRef).then((fileMetadata) => {
+                                updateMetadata(fileRef, {
+                                    customMetadata: {
+                                        ...fileMetadata.customMetadata,
+                                        screening: screeningAnalysisPromise,
+                                    },
+                                }).catch((error) => console.error("Error updating metadata:", error));
+                            });
+                        } else {
+                            console.warn("Screening analysis failed.");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error in screnning analysis:", error);
+                        setAnalysisScreeningLoading(false); 
+                    });    
         
             setSmartReportLoading(true);
             const smartReportPromise = generateSmartReport(text)
@@ -329,12 +379,14 @@ function Dashboard() {
                     setSmartReportLoading(false);
                 });
         
-            await Promise.all([fullAnalysisPromise, smartReportPromise]);
+            await Promise.all([fullAnalysisPromise, screeningAnalysisPromise, smartReportPromise]);
         } catch (error) {
             toast.error(t('erroAnalise'));
             setAnalysisPerformed(false);
+            setScreeningPerformed(false);
         } finally {
             setLoading(false);
+            setAnalysisScreeningLoading(false);
             setSmartReportLoading(false);
         }
     };
@@ -480,6 +532,27 @@ function Dashboard() {
         }
     };
 
+    const analyseBloodTestForScreening = async (text) => {
+        const language = getLanguageFromDomain();
+        const userName = userData.username;
+        const age = userAge;
+        const medicalCondition = userData.medicalCondition;
+
+        try {
+            const response = await axios.post(`${BASE_URL}/analyze-blood-test-screening`, {
+                text,
+                userName,
+                age,
+                medicalCondition,
+                language
+            });
+
+            return response.data.analysis;
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const generateSmartReport = async (text) => {
         try {
             const language = getLanguageFromDomain();
@@ -516,19 +589,35 @@ function Dashboard() {
     };
 
     useEffect(() => {
-        if (analysisResult && index < analysisResult.length) {
+        if (analysisResult && analysisIndex < analysisResult.length) {
             const intervalId = setInterval(() => {
-                setDisplayedText((prev) => prev + analysisResult.charAt(index));
-                setIndex((prev) => prev + 1);
+                setDisplayedText((prev) => prev + analysisResult.charAt(analysisIndex));
+                setAnalysisIndex((prev) => prev + 1);
             }, 10);
 
-            if (index === analysisResult.length) {
+            if (analysisIndex === analysisResult.length) {
                 clearInterval(intervalId);
             }
 
             return () => clearInterval(intervalId);
         }
-    }, [index, analysisResult]);
+    }, [analysisIndex, analysisResult]);
+
+    useEffect(() => {
+        if (screeningResult && screeningIndex < screeningResult.length) {
+            const intervalId = setInterval(() => {
+                setScreeningAnalysis((prev) => prev + screeningResult.charAt(screeningIndex));
+                setScreeningIndex((prev) => prev + 1);
+            }, 10);
+
+            if (screeningIndex === screeningResult.length) {
+                clearInterval(intervalId);
+            }
+
+            return () => clearInterval(intervalId);
+        }
+    }, [screeningIndex, screeningResult]);
+
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -816,7 +905,7 @@ function Dashboard() {
                         className="bg-white mb-6 shadow-md rounded-md p-6"
                         >
                         {/* No Data message */}
-                        {!analysisPerformed && !loading && !smartReportLoading && (
+                        {!analysisPerformed && !loading && !smartReportLoading && !screeningPerformed && (
                             <div>
                             <h1 className="text-xl font-bold text-black mb-4">
                                 {t("yourAnalysisBy")}{" "}
@@ -847,6 +936,17 @@ function Dashboard() {
                                 }`}
                                 >
                                 Full Analysis
+                                </button>
+
+                                <button
+                                onClick={() => handleTabChange("screeningAnalysis")}
+                                className={`px-4 py-2 ${
+                                    activeTab === "screeningAnalysis"
+                                    ? "border-b-2 border-red-500 text-red-500 font-bold"
+                                    : "text-gray-600"
+                                }`}
+                                >
+                                Screening Analysis
                                 </button>
 
                                 <button
@@ -888,6 +988,39 @@ function Dashboard() {
                                 )}
                                 </div>
                             )}
+
+                            {/* Screening Analysis Tab */}
+                            {activeTab === "screeningAnalysis" && (
+                            <div>
+                                {analysisScreeningLoading ? (
+                                <div className="flex items-center justify-center">
+                                    <img
+                                    src={BloodFlowLogoNL}
+                                    alt="Logo"
+                                    className="w-44 animate-spin"
+                                    />
+                                </div>
+                                ) : screeningAnalysis ? (
+                                <div className="typing-effect">
+                                    <ReactMarkdown
+                                    children={screeningAnalysis}
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        strong: ({ children }) => (
+                                        <strong className="text-[#ce3d3d]">{children}</strong>
+                                        ),
+                                        p: ({ children }) => <p className="my-4">{children}</p>,
+                                    }}
+                                    />
+                                </div>
+                                ) : (
+                                <p className="text-center my-4 text-gray-500">
+                                    No screening analysis is available at the moment.
+                                </p>
+                                )}
+                            </div>
+                            )}
+
 
                             {/* Smart Report Tab */}
                             {activeTab === "smartReport" && (
