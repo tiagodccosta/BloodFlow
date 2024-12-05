@@ -425,7 +425,7 @@ async function analyzeBloodTestForScreening(text, languageDirective, userName, u
             2. **Explicação Breve**:
                 - Explique rapidamente por que esses parâmetros são motivo de preocupação, com foco nos aspectos críticos da condição médica do paciente.
 
-            3. **Caso Não Haja Preocupações**:
+            Caso Não Haja Preocupações:
                 - Se os resultados estiverem dentro dos parâmetros normais, informe que não há preocupações.
                 - Liste quaisquer parâmetros que estão bons, como "Colesterol: 150 mg/dL", para dar uma visão geral positiva.
 
@@ -441,7 +441,7 @@ async function analyzeBloodTestForScreening(text, languageDirective, userName, u
     const response = await axios.post(url, {
         model: "gpt-4o-2024-08-06",
         messages: messages,
-        max_tokens: 3000,
+        max_tokens: 1500,
         n: 1
     }, {
         headers: {
@@ -525,7 +525,7 @@ app.post('/analyze-blood-test', async (req, res) => {
 
     try {
         const languageDirective = language === 'en'
-            ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo."
+            ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo. Tudo em Inglês incluindo os bullet points, como 'Resumo' ou 'Análise Detalhada'."
             : "Por favor, responde ao paciente em Português de Portugal.";
 
         const analysis = await analyzeTextWithOpenAI(text, languageDirective, userName, age, medicalCondition);
@@ -542,7 +542,7 @@ app.post('/analyze-blood-test-screening', async (req, res) => {
 
     try {
         const languageDirective = language === 'en'
-            ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo."
+            ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo. Tudo em Inglês incluindo os bullet points, como 'Principais Pontos de Atenção' ou 'Explicação Breve'. Tal como os valores dos parâmetros, como 'Colesterol: 250 mg/dL', 'Glicose: 180 mg/dL'."
             : "Por favor, responde ao paciente em Português de Portugal.";
 
         const analysis = await analyzeBloodTestForScreening(text, languageDirective, userName, age, medicalCondition);

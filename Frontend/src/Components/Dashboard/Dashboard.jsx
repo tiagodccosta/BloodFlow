@@ -38,7 +38,8 @@ function Dashboard() {
     const [scores, setScores] = useState([]);
     const [analysisPerformed, setAnalysisPerformed] = useState(false);
     const [displayedText, setDisplayedText] = useState("");
-    const [index, setIndex] = useState(0);
+    const [analysisIndex, setAnalysisIndex] = useState(0);
+    const [screeningIndex, setScreeningIndex] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [showNewFileModal, setShowNewFileModal] = useState(false);
     const [showEditPopup, setShowEditPopup] = useState(false);
@@ -340,7 +341,7 @@ function Dashboard() {
                 setAnalysisScreeningLoading(true); 
                 const screeningAnalysisPromise = analyseBloodTestForScreening(text)
                     .then((screeningAnalysisPromise) => {
-                        setLoading(false);
+                        setAnalysisScreeningLoading(false);
                         setScreeningResult(screeningAnalysisPromise);
             
                         if (screeningAnalysisPromise) {
@@ -588,34 +589,35 @@ function Dashboard() {
     };
 
     useEffect(() => {
-        if (analysisResult && index < analysisResult.length) {
+        if (analysisResult && analysisIndex < analysisResult.length) {
             const intervalId = setInterval(() => {
-                setDisplayedText((prev) => prev + analysisResult.charAt(index));
-                setIndex((prev) => prev + 1);
+                setDisplayedText((prev) => prev + analysisResult.charAt(analysisIndex));
+                setAnalysisIndex((prev) => prev + 1);
             }, 10);
 
-            if (index === analysisResult.length) {
+            if (analysisIndex === analysisResult.length) {
                 clearInterval(intervalId);
             }
 
             return () => clearInterval(intervalId);
         }
-    }, [index, analysisResult]);
+    }, [analysisIndex, analysisResult]);
 
     useEffect(() => {
-        if (screeningResult && index < screeningResult.length) {
+        if (screeningResult && screeningIndex < screeningResult.length) {
             const intervalId = setInterval(() => {
-                setScreeningAnalysis((prev) => prev + screeningResult.charAt(index));
-                setIndex((prev) => prev + 1);
+                setScreeningAnalysis((prev) => prev + screeningResult.charAt(screeningIndex));
+                setScreeningIndex((prev) => prev + 1);
             }, 10);
 
-            if (index === screeningResult.length) {
+            if (screeningIndex === screeningResult.length) {
                 clearInterval(intervalId);
             }
 
             return () => clearInterval(intervalId);
         }
-    }, [index, screeningResult]);
+    }, [screeningIndex, screeningResult]);
+
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
