@@ -406,6 +406,53 @@ app.get('/check-job-status/:jobId', (req, res) => {
     }
 });
 
+async function analyzeBloodTestForScreening(text, languageDirective, userName, userAge, medicalCondition) {
+    const url = "https://api.openai.com/v1/chat/completions";
+
+    const messages = [
+        {
+            role: "system",
+            content: `
+            ${languageDirective}
+
+            Tu és o BloodFlow AI, um analista médico especializado. Analise os seguintes resultados de análises de sangue para o paciente chamado ${userName}, de ${userAge} anos, com a condição médica ${medicalCondition}. 
+
+            Forneça uma análise concisa destacando os principais pontos de atenção:
+
+            1. **Principais Pontos de Atenção**:
+                - Se existirem resultados preocupantes, liste os parâmetros com valores anormais (por exemplo, 'Colesterol: 250 mg/dL', 'Glicose: 180 mg/dL').
+            
+            2. **Explicação Breve**:
+                - Explique rapidamente por que esses parâmetros são motivo de preocupação, com foco nos aspectos críticos da condição médica do paciente.
+
+            3. **Caso Não Haja Preocupações**:
+                - Se os resultados estiverem dentro dos parâmetros normais, informe que não há preocupações.
+                - Liste quaisquer parâmetros que estão bons, como "Colesterol: 150 mg/dL", para dar uma visão geral positiva.
+
+            Mantenha a análise objetiva e clara, para que o médico possa identificar rapidamente qualquer problema.
+            `,
+        },
+        {
+            role: "user",
+            content: text
+        }
+    ];
+
+    const response = await axios.post(url, {
+        model: "gpt-4o-2024-08-06",
+        messages: messages,
+        max_tokens: 3000,
+        n: 1
+    }, {
+        headers: {
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    return response.data.choices[0].message.content;
+};
+
 async function analyzeTextWithOpenAI(text, languageDirective, userName, userAge, medicalCondition) {
     const url = "https://api.openai.com/v1/chat/completions";
 
@@ -487,6 +534,23 @@ app.post('/analyze-blood-test', async (req, res) => {
     } catch (error) {
         console.error("Error analyzing blood test:", error);
         res.status(500).json({ error: "Failed to analyze blood test" });
+    }
+});
+
+app.post('/analyze-blood-test-screening', async (req, res) => {
+    const { text, userName, age, medicalCondition, language } = req.body;
+
+    try {
+        const languageDirective = language === 'en'
+            ? "Por favor, dá a resposta ao paciente em Inglês, seguindo a formatação indicada abaixo."
+            : "Por favor, responde ao paciente em Português de Portugal.";
+
+        const analysis = await analyzeBloodTestForScreening(text, languageDirective, userName, age, medicalCondition);
+
+        res.json({ analysis });
+    } catch (error) {
+        console.error("Error analyzing blood test for screening:", error);
+        res.status(500).json({ error: "Failed to analyze blood test for screening" });
     }
 });
 
