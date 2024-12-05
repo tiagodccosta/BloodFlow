@@ -60,7 +60,7 @@ const Services = () => {
 
                 <div className="relative flex flex-wrap">
                     <div className="absolute inset-0 bg-gray-800 rounded-md shadow-md transform translate-x-2 translate-y-2"></div>
-                    <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
+                    <div className="bg-gradient-to-br from-[#ce3d3d] to-red-500 text-center text-white/90 font-semibold px-6 py-12 shadow-2xl rounded-md border-2 border-black transform transition-transform duration-300 hover:-translate-y-1 hover:-translate-x-1">
                         <p><span className="font-bold">{t('card3Prob')}</span>{t('card3ProbText')}</p>
                     </div>
                 </div>
@@ -117,6 +117,21 @@ const Services = () => {
                                     <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row-reverse items-center mb-24 sm:mb-32">
+                        <div className="w-32 h-32 md:w-52 md:h-52 bg-red-300 rounded-lg mb-4 sm:mb-0 sm:ml-12 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xl font-bold text-red-600">4</span>
+                        </div>
+                        <div className="text-center sm:text-left">
+                            <h3 className="text-2xl sm:text-4xl font-semibold mb-6">{t('card4Sol')}</h3>
+                            <p className="text-gray-600 text-lg sm:text-xl">
+                                {t('card4SolText')}
+                            </p>
+                            <button className='bg-[#ff1717] w-[200px] rounded-lg font-semibold hover:scale-y-105 hover:scale-x-105 ease-in-out duration-300 py-3 text-white mt-6'>
+                                <RouterLink to="/signup">{t('buttonHero2')}</RouterLink>
+                            </button>
                         </div>
                     </div>
                 </div>
