@@ -119,6 +119,11 @@ const Dashboard = () => {
 
     const handleAddPatientClick = async () => {
         const name = prompt("Enter patient's iMed Number:");
+        if (name === null || name === "") {
+            toast.error("Please enter a valid iMed Number.");
+            return;
+        }
+
         await addPatient(name);
     };
 
