@@ -432,6 +432,7 @@ async function analyzeBloodTestForScreening(text, languageDirective, userName, u
                 - Liste quaisquer parâmetros que estão bons, como "Colesterol: 150 mg/dL", para dar uma visão geral positiva.
 
             Mantenha a análise objetiva e clara, para que o médico possa identificar rapidamente qualquer problema.
+            
             `,
         },
         {
