@@ -421,8 +421,6 @@ async function analyzeBloodTestForScreening(text, languageDirective, userName, u
 
             1. **Principais Pontos de Atenção**:
                 - Se existirem resultados preocupantes, liste os parâmetros com valores anormais (por exemplo, 'Colesterol: 250 mg/dL', 'Glicose: 180 mg/dL').
-                - Se houver valores críticos que requeiram atenção imediata, destaque-os claramente.
-                - Estes devem ser os valores fora do intervalo de referência normal ou que indiquem uma condição médica grave.
             
             2. **Explicação Breve**:
                 - Explique rapidamente por que esses parâmetros são motivo de preocupação, com foco nos aspectos críticos da condição médica do paciente.
@@ -432,7 +430,6 @@ async function analyzeBloodTestForScreening(text, languageDirective, userName, u
                 - Liste quaisquer parâmetros que estão bons, como "Colesterol: 150 mg/dL", para dar uma visão geral positiva.
 
             Mantenha a análise objetiva e clara, para que o médico possa identificar rapidamente qualquer problema.
-            
             `,
         },
         {
