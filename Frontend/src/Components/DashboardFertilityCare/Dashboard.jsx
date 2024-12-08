@@ -123,7 +123,7 @@ const Dashboard = () => {
             toast.error("Please enter a valid iMed Number.");
             return;
         }
-        
+
         await addPatient(name);
     };
 
@@ -402,12 +402,12 @@ const Dashboard = () => {
                     <div className="absolute bottom-0 left-0 w-full py-4 px-4">
                         <button 
                             onClick={handleAddPatientClick} 
-                            className="bg-[#ff0000] text-white cursor-pointer font-bold text-sm w-full py-3 rounded-md my-2"
+                            className="bg-[#ff0000] text-white font-bold text-sm w-full py-3 rounded-md my-2"
                         >
                             Add New Patient
                         </button>
     
-                        <button className="bg-black w-full rounded-md cursor-pointer font-bold py-3 text-white" onClick={handleLogout}>
+                        <button className="bg-black w-full rounded-md font-bold py-3 text-white" onClick={handleLogout}>
                             Logout
                         </button>
                     </div>
@@ -466,12 +466,12 @@ const Dashboard = () => {
                     <div className="absolute bottom-0 left-0 w-full py-4 px-4">
                         <button 
                             onClick={handleAddPatientClick} 
-                            className="bg-[#ff0000] text-white cursor-pointer w-full font-bold text-sm py-3 rounded-md my-2"
+                            className="bg-[#ff0000] text-white w-full font-bold text-sm py-3 rounded-md my-2"
                         >
                             Add New Patient
                         </button>
     
-                        <button className="bg-black w-full text-sm cursor-pointer rounded-md font-bold py-3 text-white" onClick={handleLogout}>
+                        <button className="bg-black w-full text-sm rounded-md font-bold py-3 text-white" onClick={handleLogout}>
                             Logout
                         </button>
                     </div>
@@ -520,7 +520,7 @@ const Dashboard = () => {
                                     <p className="font-bold text-black text-lg md:text-xl mb-2 md:mb-4 text-center -mt-6">Upload Patient Blood Test</p>
                                     <button 
                                         onClick={() => handleNewFileClick()} 
-                                        className="bg-[#ff0000] w-40 text-sm cursor-pointer md:w-52 rounded-md font-bold py-2 md:py-4 text-white"
+                                        className="bg-[#ff0000] w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white"
                                     >
                                         Upload Blood Test
                                     </button>
@@ -534,7 +534,7 @@ const Dashboard = () => {
                                     )}
                                     <button 
                                         onClick={handleDeleteClick} 
-                                        className="w-40 text-sm md:w-52 rounded-md cursor-pointer font-bold py-2 md:py-4 text-white mt-1 md:mt-2 md:-mb-8 bg-black"
+                                        className="w-40 text-sm md:w-52 rounded-md font-bold py-2 md:py-4 text-white mt-1 md:mt-2 md:-mb-8 bg-black"
                                     >
                                         Delete Patient
                                     </button>
