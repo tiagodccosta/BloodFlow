@@ -264,6 +264,7 @@ const Dashboard = () => {
             toast.success("Patient deleted successfully.");
             fetchPatients();
             setSelectedPatient(null);
+            setSelectedTests([]);
         } catch (error) {
             console.error("Error deleting patient:", error);
             toast.error("Error deleting patient.");
