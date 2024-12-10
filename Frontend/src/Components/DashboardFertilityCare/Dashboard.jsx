@@ -89,6 +89,10 @@ const Dashboard = () => {
     useEffect(() => {
         fetchPatientTests();
     }, []);
+
+    useEffect(() => {
+        setSelectedTests([]);
+    }, [selectedPatient]);
         
     const fetchPatientExcelFile = async (patientId) => {
         try {
@@ -145,7 +149,7 @@ const Dashboard = () => {
       
             const docRef = await addDoc(collection(db, 'FertilityCare'), newPatient);
             console.log('Patient added with ID:', docRef.id);
-
+            toast.success("Patient added successfully.");
             fetchPatients();
         } catch (error) {
             console.error('Error adding patient:', error.message);
@@ -309,6 +313,7 @@ const Dashboard = () => {
                 downloadLink.download = excelFileName;
                 downloadLink.click();
                 fetchPatientExcelFile(patientId);
+                setSelectedTests([]);
             }
         } catch (error) {
             console.error("Backend request error:", error);
