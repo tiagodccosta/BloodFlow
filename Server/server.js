@@ -25,6 +25,9 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const app = express();
 
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -980,6 +983,33 @@ app.post('/generate-smart-report', async (req, res) => {
     }
 });
 
+app.post('/ai-agent/analyse', async (req, res) => {
+
+    const { pdfFile, userName } = req.body;
+
+    console.log('Received request to analyze blood test for:', userName);
+
+    try {
+
+        const pdfBuffer = Buffer.from(pdfFile, 'base64');
+
+        console.log('PDF buffer size:', pdfBuffer.length);
+
+        const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
+
+        if (isPasswordProtected) {
+            return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
+        } else {
+            console.log('Doesnt need password');
+            const extractedText = await extractTextNoPassword(pdfBuffer);
+            const analysis = await analyzeTextWithOpenAI(extractedText, 'en', userName, '25', 'Anemia');
+            return res.json({ analysis });
+        }
+    } catch (error) {
+        console.error("Error analyzing blood test:", error);
+        res.status(500).json({ error: "Failed to analyze blood test" });
+    }
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
