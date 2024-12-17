@@ -63,35 +63,10 @@ const saveResults = async (resultData, filePath, patientName) => {
     console.error(error.stack);
   }
 };
-
-const logPatientFoldersContents = () => {
-    console.log("Logging contents of Patients folder...");
   
-    const patientFolders = fs.readdirSync(PATIENTS_FOLDER);
-  
-    patientFolders.forEach((folder) => {
-      const folderPath = path.join(PATIENTS_FOLDER, folder);
-      if (fs.statSync(folderPath).isDirectory()) {
-        console.log(`Contents of ${folder}:`);
-  
-        const files = fs.readdirSync(folderPath);
-        if (files.length === 0) {
-          console.log(`  No files found in ${folder}`);
-        } else {
-          files.forEach((file) => {
-            console.log(`  - ${file}`);
-          });
-        }
-      }
-    });
-};
-  
-
 // Monitor patient folders for new PDFs
 const monitorPatientFolders = () => {
     console.log("Agent started. Monitoring folders for new blood tests...");
-
-    logPatientFoldersContents();
   
     // Log all monitored patient folders for debugging
     console.log("Monitoring patient folders:");
@@ -106,7 +81,6 @@ const monitorPatientFolders = () => {
     const watcher = chokidar.watch(`${PATIENTS_FOLDER}`, {
       persistent: true,
       ignoreInitial: false, // Watch existing files
-      depth: 2,
     });
   
     watcher.on("add", async (filePath) => {
@@ -163,7 +137,7 @@ const processQueue = async () => {
 
     // Reset the flag and recursively process the next file in the queue
     isProcessing = false;
-    setTimeout(processQueue, 1000);
+    setTimeout(processQueue, 500);
   } else {
     console.log('No more files in the queue.');
   }
