@@ -5,10 +5,9 @@ const axios = require("axios");
 const fse = require("fs-extra");
 require("dotenv").config();
 
-// Configuration
-const PATIENTS_FOLDER = path.resolve(__dirname, "../Patients");
-const RESULTS_FOLDER = path.resolve(__dirname, "../Results");
-const BLOODFLOW_API_URL = "http://localhost:4000/ai-agent/analyse";
+const PATIENTS_FOLDER = path.resolve(__dirname, process.env.PATIENTS_FOLDER);
+const RESULTS_FOLDER = path.resolve(__dirname, process.env.RESULTS_FOLDER);
+const BLOODFLOW_API_URL = process.env.BLOODFLOW_API_URL;
 
 // Helper function to send file to BloodFlow API
 const analyzeBloodTest = async (filePath, patientName) => {
@@ -109,14 +108,13 @@ const monitorPatientFolders = () => {
     // Watch all folders inside the patients folder
     const watcher = chokidar.watch(`${PATIENTS_FOLDER}`, {
       persistent: true,
-      ignoreInitial: false, // Watch existing files
+      ignoreInitial: false,
     });
   
     watcher.on("add", (filePath) => {
         console.log(`New blood test detected: ${filePath}`);
         const patientName = path.basename(path.dirname(filePath));
     
-        // Directly add the detected file to the queue
         addToQueue(filePath, patientName);
     });
 
