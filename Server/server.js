@@ -994,11 +994,9 @@ app.post('/ai-agent/analyse', async (req, res) => {
     console.log(`Received request to analyze blood test for: ${userName}`);
 
     try {
-        // Decode the base64 PDF file into a buffer
         const pdfBuffer = Buffer.from(pdfFile, 'base64');
         console.log('PDF buffer size:', pdfBuffer.length);
 
-        // Check if the PDF is password-protected
         const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
         if (isPasswordProtected) {
             console.warn('PDF is password-protected. Request rejected.');
@@ -1007,7 +1005,6 @@ app.post('/ai-agent/analyse', async (req, res) => {
 
         console.log('PDF is not password-protected. Proceeding with text extraction.');
 
-        // Extract text from the PDF
         const extractedText = await extractTextNoPassword(pdfBuffer);
         if (!extractedText) {
             console.error('Text extraction failed. No text returned.');
@@ -1016,7 +1013,6 @@ app.post('/ai-agent/analyse', async (req, res) => {
 
         console.log('Text successfully extracted. Proceeding with AI analysis.');
 
-        // Perform analysis with OpenAI
         const analysis = await analyzeTextWithOpenAI(extractedText, 'en', userName, '25', 'Anemia');
         if (!analysis) {
             console.error('AI analysis failed. No results returned.');
@@ -1026,10 +1022,7 @@ app.post('/ai-agent/analyse', async (req, res) => {
         console.log('AI analysis completed successfully. Returning results.');
         return res.json({ analysis });
     } catch (error) {
-        // Log the error stack trace for debugging
         console.error('Error analyzing blood test:', error.stack || error);
-
-        // Return a clear error message
         return res.status(500).json({ error: 'Failed to analyze blood test. Please try again later.' });
     }
 });
