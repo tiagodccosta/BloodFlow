@@ -984,32 +984,56 @@ app.post('/generate-smart-report', async (req, res) => {
 });
 
 app.post('/ai-agent/analyse', async (req, res) => {
-
     const { pdfFile, userName } = req.body;
 
-    console.log('Received request to analyze blood test for:', userName);
+    if (!pdfFile || !userName) {
+        console.error('Missing required fields: pdfFile or userName');
+        return res.status(400).json({ error: 'Missing required fields: pdfFile or userName' });
+    }
+
+    console.log(`Received request to analyze blood test for: ${userName}`);
 
     try {
-
+        // Decode the base64 PDF file into a buffer
         const pdfBuffer = Buffer.from(pdfFile, 'base64');
-
         console.log('PDF buffer size:', pdfBuffer.length);
 
+        // Check if the PDF is password-protected
         const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
-
         if (isPasswordProtected) {
+            console.warn('PDF is password-protected. Request rejected.');
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
-        } else {
-            console.log('Doesnt need password');
-            const extractedText = await extractTextNoPassword(pdfBuffer);
-            const analysis = await analyzeTextWithOpenAI(extractedText, 'en', userName, '25', 'Anemia');
-            return res.json({ analysis });
         }
+
+        console.log('PDF is not password-protected. Proceeding with text extraction.');
+
+        // Extract text from the PDF
+        const extractedText = await extractTextNoPassword(pdfBuffer);
+        if (!extractedText) {
+            console.error('Text extraction failed. No text returned.');
+            return res.status(500).json({ error: 'Failed to extract text from the PDF.' });
+        }
+
+        console.log('Text successfully extracted. Proceeding with AI analysis.');
+
+        // Perform analysis with OpenAI
+        const analysis = await analyzeTextWithOpenAI(extractedText, 'en', userName, '25', 'Anemia');
+        if (!analysis) {
+            console.error('AI analysis failed. No results returned.');
+            return res.status(500).json({ error: 'Failed to analyze the extracted text.' });
+        }
+
+        console.log('AI analysis completed successfully. Returning results.');
+        return res.json({ analysis });
     } catch (error) {
-        console.error("Error analyzing blood test:", error);
-        res.status(500).json({ error: "Failed to analyze blood test" });
+        // Log the error stack trace for debugging
+        console.error('Error analyzing blood test:', error.stack || error);
+
+        // Return a clear error message
+        return res.status(500).json({ error: 'Failed to analyze blood test. Please try again later.' });
     }
 });
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
