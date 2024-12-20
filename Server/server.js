@@ -25,6 +25,9 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const app = express();
 
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -58,7 +61,7 @@ admin.initializeApp({
 firebase.initializeApp({
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  });
+});
 
 const bucketName = process.env.STORAGE_BUCKET;
 
@@ -977,6 +980,50 @@ app.post('/generate-smart-report', async (req, res) => {
     } catch (error) {
         console.error('Error generating smart report:', error);
         res.status(500).json({ error: 'Failed to generate smart report' });
+    }
+});
+
+app.post('/ai-agent/analyse', async (req, res) => {
+    const { pdfFile, userName } = req.body;
+
+    if (!pdfFile || !userName) {
+        console.error('Missing required fields: pdfFile or userName');
+        return res.status(400).json({ error: 'Missing required fields: pdfFile or userName' });
+    }
+
+    console.log(`Received request to analyze blood test for: ${userName}`);
+
+    try {
+        const pdfBuffer = Buffer.from(pdfFile, 'base64');
+        console.log('PDF buffer size:', pdfBuffer.length);
+
+        const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
+        if (isPasswordProtected) {
+            console.warn('PDF is password-protected. Request rejected.');
+            return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
+        }
+
+        console.log('PDF is not password-protected. Proceeding with text extraction.');
+
+        const extractedText = await extractTextNoPassword(pdfBuffer);
+        if (!extractedText) {
+            console.error('Text extraction failed. No text returned.');
+            return res.status(500).json({ error: 'Failed to extract text from the PDF.' });
+        }
+
+        console.log('Text successfully extracted. Proceeding with AI analysis.');
+
+        const analysis = await analyzeTextWithOpenAI(extractedText, 'en', userName, '25', 'Anemia');
+        if (!analysis) {
+            console.error('AI analysis failed. No results returned.');
+            return res.status(500).json({ error: 'Failed to analyze the extracted text.' });
+        }
+
+        console.log('AI analysis completed successfully. Returning results.');
+        return res.json({ analysis });
+    } catch (error) {
+        console.error('Error analyzing blood test:', error.stack || error);
+        return res.status(500).json({ error: 'Failed to analyze blood test. Please try again later.' });
     }
 });
 
