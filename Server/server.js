@@ -987,39 +987,27 @@ app.post('/ai-agent/analyse', async (req, res) => {
     const { pdfFile, userName } = req.body;
 
     if (!pdfFile || !userName) {
-        console.error('Missing required fields: pdfFile or userName');
         return res.status(400).json({ error: 'Missing required fields: pdfFile or userName' });
     }
 
-    console.log(`Received request to analyze blood test for: ${userName}`);
-
     try {
         const pdfBuffer = Buffer.from(pdfFile, 'base64');
-        console.log('PDF buffer size:', pdfBuffer.length);
 
         const isPasswordProtected = await checkPDFPasswordProtection(pdfBuffer);
         if (isPasswordProtected) {
-            console.warn('PDF is password-protected. Request rejected.');
             return res.status(400).json({ message: 'PDF is password-protected. Please provide the password.' });
         }
 
-        console.log('PDF is not password-protected. Proceeding with text extraction.');
-
         const extractedText = await extractTextNoPassword(pdfBuffer);
         if (!extractedText) {
-            console.error('Text extraction failed. No text returned.');
             return res.status(500).json({ error: 'Failed to extract text from the PDF.' });
         }
 
-        console.log('Text successfully extracted. Proceeding with AI analysis.');
-
         const analysis = await analyzeTextWithOpenAI(extractedText, 'en', userName, '25', 'Anemia');
         if (!analysis) {
-            console.error('AI analysis failed. No results returned.');
             return res.status(500).json({ error: 'Failed to analyze the extracted text.' });
         }
 
-        console.log('AI analysis completed successfully. Returning results.');
         return res.json({ analysis });
     } catch (error) {
         console.error('Error analyzing blood test:', error.stack || error);
