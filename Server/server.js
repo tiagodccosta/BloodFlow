@@ -61,7 +61,7 @@ admin.initializeApp({
 firebase.initializeApp({
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  });
+});
 
 const bucketName = process.env.STORAGE_BUCKET;
 
