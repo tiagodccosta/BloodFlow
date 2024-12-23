@@ -23,3 +23,6 @@ yarn-error.log*
 
 node_modules/
 .env
+
+/K8s/tls.key
+/K8s/tls.crt
