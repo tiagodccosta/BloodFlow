@@ -1,0 +1,85 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bloodflow-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - bloodflow.eu
+    - www.bloodflow.eu
+    - bloodflow.pt
+    - www.bloodflow.pt
+    secretName: bloodflow-tls
+  rules:
+  - host: bloodflow.eu
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-backend-service
+            port:
+              number: 4000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-frontend-service
+            port:
+              number: 3000
+  - host: www.bloodflow.eu
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-backend-service
+            port:
+              number: 4000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-frontend-service
+            port:
+              number: 3000
+  - host: bloodflow.pt
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-backend-service
+            port:
+              number: 4000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-frontend-service
+            port:
+              number: 3000
+  - host: www.bloodflow.pt
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-backend-service
+            port:
+              number: 4000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bloodflow-frontend-service
+            port:
+              number: 3000

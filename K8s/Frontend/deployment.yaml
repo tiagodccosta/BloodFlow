@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bloodflow-frontend
+  labels:
+    app: bloodflow-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bloodflow-frontend
+  template:
+    metadata:
+      labels:
+        app: bloodflow-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: tiagodccosta/frontend-container:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m" 
+            memory: "512Mi"
